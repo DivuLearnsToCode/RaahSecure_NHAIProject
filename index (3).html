@@ -1,0 +1,2465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RoadWatch — India Road Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ─────────────────────────────────────────
+   DESIGN TOKENS — Deep Space Premium
+───────────────────────────────────────── */
+:root {
+  --bg-void:    #050508;
+  --bg-base:    #080810;
+  --bg-raised:  #0c0c18;
+  --bg-surface: #111120;
+  --bg-overlay: #181830;
+  --bg-glass:   rgba(12,12,24,0.7);
+
+  --border:     rgba(255,255,255,0.06);
+  --border-md:  rgba(255,255,255,0.10);
+  --border-str: rgba(255,255,255,0.18);
+  --border-hero: rgba(255,255,255,0.12);
+
+  --blue:       #4f8ef7;
+  --blue-bright:#6ba3ff;
+  --blue-dim:   rgba(79,142,247,0.12);
+  --blue-glow:  rgba(79,142,247,0.20);
+
+  --amber:      #f5a623;
+  --amber-dim:  rgba(245,166,35,0.12);
+  --red:        #ff4d4d;
+  --red-dim:    rgba(255,77,77,0.12);
+  --green:      #2dd885;
+  --green-dim:  rgba(45,216,133,0.12);
+  --purple:     #a78bfa;
+  --purple-dim: rgba(167,139,250,0.12);
+  --cyan:       #22d3ee;
+  --slate:      #64748b;
+
+  --t1: #f0f4ff;
+  --t2: #8b9ec7;
+  --t3: #3d4f73;
+  --t4: #1e2840;
+
+  --ff: 'DM Sans', system-ui, sans-serif;
+  --fd: 'Syne', system-ui, sans-serif;
+  --fm: 'DM Mono', monospace;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-2xl: 28px;
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md:  0 4px 24px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  --shadow-lg:  0 8px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
+  --shadow-hero: 0 16px 64px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08), 0 0 40px rgba(79,142,247,0.08);
+  --shadow-glow: 0 0 30px rgba(79,142,247,0.15);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; background: var(--bg-void); color: var(--t1); font-family: var(--ff); font-size: 14px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(79,142,247,0.2); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Noise overlay */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 200px; opacity: 0.4;
+}
+
+/* ─── HEADER ─── */
+header {
+  position: relative; z-index: 200;
+  height: 60px; padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(5,5,8,0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+header::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(79,142,247,0.3), transparent);
+}
+.logo { display:flex; align-items:center; gap:14px; text-decoration:none; }
+.logo-icon {
+  width:36px; height:36px; border-radius:var(--r-sm); flex-shrink:0;
+  background: linear-gradient(135deg, #1a3a8f, var(--blue));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 0 16px rgba(79,142,247,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  position:relative; overflow:hidden;
+}
+.logo-icon::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+}
+.logo-icon svg { width:17px; height:17px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; position:relative; z-index:1; }
+.logo-text { display:flex; flex-direction:column; gap:1px; }
+.logo-wordmark { font-family:var(--fd); font-size:16px; font-weight:800; letter-spacing:-0.3px; color:var(--t1); line-height:1; }
+.logo-wordmark span { color:var(--blue-bright); }
+.logo-sub { font-family:var(--fm); font-size:9px; color:var(--t3); letter-spacing:2px; text-transform:uppercase; }
+
+.nav { display:flex; align-items:center; gap:2px; background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--r-md); padding:4px; }
+.nav-btn {
+  display:flex; align-items:center; gap:7px;
+  padding:7px 16px; border-radius:var(--r-sm); border:none; cursor:pointer;
+  font-family:var(--fd); font-size:13px; font-weight:600; letter-spacing:0.1px;
+  color:var(--t3); background:transparent;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  position:relative;
+}
+.nav-btn:hover { color:var(--t2); }
+.nav-btn.active { color:var(--t1); background:var(--bg-overlay); box-shadow:var(--shadow-sm); }
+.nav-btn.active::after {
+  content:''; position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+  width:20px; height:2px; background:var(--blue); border-radius:2px;
+  box-shadow: 0 0 8px var(--blue);
+}
+.nav-btn svg { width:14px; height:14px; flex-shrink:0; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+.hdr-right { display:flex; align-items:center; gap:10px; }
+.pill {
+  display:flex; align-items:center; gap:7px;
+  padding:6px 14px; border-radius:20px;
+  border:1px solid var(--border); background:var(--bg-raised);
+  font-family:var(--fm); font-size:11px; color:var(--t3); letter-spacing:0.3px;
+  transition: border-color 0.2s;
+}
+.pill:hover { border-color:var(--border-md); }
+.dot-live { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse-dot 2.5s infinite; box-shadow:0 0 6px var(--green); }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 60%{opacity:0.4;transform:scale(0.8)} }
+
+.ask-btn {
+  display:flex; align-items:center; gap:9px;
+  padding:8px 18px; border-radius:var(--r-md);
+  border:1px solid rgba(79,142,247,0.35);
+  background: linear-gradient(135deg, rgba(79,142,247,0.12), rgba(79,142,247,0.06));
+  font-family:var(--fd); font-size:13px; font-weight:600; color:var(--blue-bright);
+  cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+}
+.ask-btn::before {
+  content:''; position:absolute; inset:0; opacity:0;
+  background: linear-gradient(135deg, rgba(79,142,247,0.2), transparent);
+  transition: opacity 0.2s;
+}
+.ask-btn:hover::before { opacity:1; }
+.ask-btn:hover { border-color:rgba(79,142,247,0.5); box-shadow:0 0 20px rgba(79,142,247,0.15); }
+.ask-btn svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.ask-btn-spark { width:6px; height:6px; border-radius:50%; background:var(--blue-bright); animation:pulse-dot 1.5s infinite; }
+
+/* ─── MAIN ─── */
+.main { height:calc(100vh - 60px); position:relative; overflow:hidden; }
+.panel { display:none; height:100%; }
+.panel.active { display:flex; }
+
+/* ─── BADGE ─── */
+.badge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:6px; font-family:var(--fm); font-size:10px; font-weight:500; letter-spacing:0.3px; }
+.badge::before { content:'●'; font-size:6px; }
+.badge-red { background:var(--red-dim); border:1px solid rgba(255,77,77,0.25); color:var(--red); }
+.badge-amber { background:var(--amber-dim); border:1px solid rgba(245,166,35,0.25); color:var(--amber); }
+.badge-green { background:var(--green-dim); border:1px solid rgba(45,216,133,0.25); color:var(--green); }
+.badge-blue { background:var(--blue-dim); border:1px solid rgba(79,142,247,0.25); color:var(--blue-bright); }
+.badge-purple { background:var(--purple-dim); border:1px solid rgba(167,139,250,0.25); color:var(--purple); }
+.badge-slate { background:rgba(100,116,139,0.1); border:1px solid rgba(100,116,139,0.2); color:var(--slate); }
+
+/* ══════════════════════
+   DRIVE PANEL
+══════════════════════ */
+#drive-panel { flex-direction:row; }
+.drive-3d { flex:1; position:relative; overflow:hidden; }
+#threec { width:100%; height:100%; display:block; }
+
+/* Subtle vignette */
+.drive-3d::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(5,5,8,0.6) 100%);
+}
+
+/* HUD */
+.hud { position:absolute; inset:0; pointer-events:none; z-index:10; }
+.hud-top { display:flex; justify-content:space-between; padding:16px; gap:10px; }
+.hud-left, .hud-right { display:flex; gap:10px; }
+.hud-card {
+  background:rgba(5,5,8,0.75); border:1px solid var(--border-md);
+  border-radius:var(--r-md); padding:12px 16px;
+  backdrop-filter:blur(20px);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hud-card:hover { transform:translateY(-1px); box-shadow:var(--shadow-md); }
+.hud-label { font-family:var(--fm); font-size:9px; color:var(--t3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:6px; }
+.hud-value { font-family:var(--fd); font-size:26px; font-weight:700; color:var(--blue-bright); line-height:1; }
+.hud-value .unit { font-family:var(--fm); font-size:9px; color:var(--t3); margin-left:3px; }
+.hud-text { font-family:var(--ff); font-size:15px; font-weight:600; line-height:1; }
+
+.hud-bottom { position:absolute; bottom:16px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:flex-end; }
+.speedo {
+  width:120px; height:120px; border-radius:50%;
+  background:rgba(5,5,8,0.85); border:1px solid var(--border-md);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  backdrop-filter:blur(20px);
+  box-shadow: inset 0 0 30px rgba(79,142,247,0.08), 0 0 20px rgba(0,0,0,0.5);
+  position:relative;
+}
+.speedo::before {
+  content:''; position:absolute; inset:-1px; border-radius:50%;
+  background: conic-gradient(var(--blue) 0%, transparent 60%);
+  opacity:0.12; animation:speedo-spin 8s linear infinite;
+}
+@keyframes speedo-spin { to { transform:rotate(360deg); } }
+.speedo-num { font-family:var(--fd); font-size:36px; font-weight:800; color:var(--t1); line-height:1; position:relative; z-index:1; }
+.speedo-unit { font-family:var(--fm); font-size:8px; color:var(--t3); letter-spacing:3px; margin-top:4px; position:relative; z-index:1; }
+
+.warn-stack { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.warn-banner {
+  padding:9px 22px; border-radius:var(--r-sm);
+  font-family:var(--fd); font-size:12px; font-weight:700; letter-spacing:0.3px;
+  backdrop-filter:blur(16px); display:none;
+}
+.warn-banner.show { display:block; animation:wb-pulse 1s infinite; }
+.wb-amber { background:rgba(245,166,35,0.1); border:1px solid rgba(245,166,35,0.4); color:var(--amber); box-shadow:0 0 20px rgba(245,166,35,0.1); }
+.wb-red   { background:rgba(255,77,77,0.1); border:1px solid rgba(255,77,77,0.4); color:var(--red); box-shadow:0 0 20px rgba(255,77,77,0.1); }
+.wb-blue  { background:rgba(79,142,247,0.1); border:1px solid rgba(79,142,247,0.4); color:var(--blue-bright); box-shadow:0 0 20px rgba(79,142,247,0.1); }
+@keyframes wb-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.fog-hud {
+  background:rgba(5,5,8,0.8); border:1px solid var(--border-md);
+  border-radius:var(--r-md); padding:12px 16px; backdrop-filter:blur(20px);
+}
+.fog-bar { width:90px; height:4px; background:var(--bg-overlay); border-radius:2px; margin-top:8px; overflow:hidden; }
+.fog-fill { height:100%; border-radius:2px; background:linear-gradient(to right, var(--green), var(--amber) 50%, var(--red)); transition:width 0.6s ease; }
+.warn-overlay { position:absolute; inset:0; pointer-events:none; border:2px solid transparent; transition:all 0.3s; }
+.warn-overlay.amber { border-color:rgba(245,166,35,0.35); box-shadow:inset 0 0 80px rgba(245,166,35,0.05); }
+.warn-overlay.red   { border-color:rgba(255,77,77,0.35); box-shadow:inset 0 0 80px rgba(255,77,77,0.07); animation:red-flash 0.8s infinite; }
+@keyframes red-flash { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+/* 3D Hotspot markers */
+.hotspot {
+  position:absolute; pointer-events:all; cursor:pointer;
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  transition:transform 0.2s; z-index:20;
+}
+.hotspot:hover { transform:scale(1.1); }
+.hotspot-dot {
+  width:14px; height:14px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+}
+.hotspot-dot.red { background:rgba(255,77,77,0.2); border:2px solid var(--red); animation:hotspot-pulse 2s infinite; box-shadow:0 0 12px rgba(255,77,77,0.4); }
+.hotspot-dot.amber { background:rgba(245,166,35,0.2); border:2px solid var(--amber); animation:hotspot-pulse 2.5s infinite; box-shadow:0 0 12px rgba(245,166,35,0.4); }
+.hotspot-dot.blue { background:rgba(79,142,247,0.2); border:2px solid var(--blue); animation:hotspot-pulse 3s infinite; box-shadow:0 0 12px rgba(79,142,247,0.4); }
+@keyframes hotspot-pulse { 0%,100%{box-shadow:0 0 8px currentColor} 50%{box-shadow:0 0 20px currentColor} }
+.hotspot-label {
+  background:rgba(5,5,8,0.9); border:1px solid var(--border-md);
+  border-radius:6px; padding:5px 10px; font-family:var(--fm); font-size:9px;
+  white-space:nowrap; backdrop-filter:blur(12px);
+  opacity:0; transform:translateY(4px); transition:all 0.2s;
+}
+.hotspot:hover .hotspot-label { opacity:1; transform:translateY(0); }
+
+/* Telemetry strip */
+.telemetry-strip {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  display:flex; gap:16px; pointer-events:none;
+  background:rgba(5,5,8,0.6); border:1px solid var(--border-md);
+  border-radius:var(--r-xl); padding:10px 24px;
+  backdrop-filter:blur(16px);
+}
+.tele-item { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.tele-val { font-family:var(--fd); font-size:18px; font-weight:700; line-height:1; }
+.tele-lbl { font-family:var(--fm); font-size:8px; color:var(--t3); letter-spacing:1.5px; text-transform:uppercase; }
+.tele-sep { width:1px; background:var(--border); align-self:stretch; }
+
+/* DRIVE SIDEBAR */
+.drive-sidebar {
+  width:276px; flex-shrink:0;
+  background:var(--bg-raised); border-left:1px solid var(--border);
+  display:flex; flex-direction:column; overflow-y:auto;
+}
+.sb-group { padding:16px 18px; border-bottom:1px solid var(--border); }
+.sb-group:last-child { border-bottom:none; }
+.sb-group-title { font-family:var(--fd); font-size:11px; font-weight:700; color:var(--t3); letter-spacing:1px; text-transform:uppercase; margin-bottom:14px; }
+
+.toggle-row { display:flex; align-items:center; justify-content:space-between; padding:7px 0; }
+.toggle-label { font-size:13px; font-weight:500; color:var(--t2); }
+.toggle-sw { width:42px; height:24px; border-radius:12px; background:var(--bg-overlay); border:1px solid var(--border-md); position:relative; cursor:pointer; transition:all 0.25s; pointer-events:all; flex-shrink:0; }
+.toggle-sw.on { background:linear-gradient(135deg, #1a5de8, var(--blue)); border-color:var(--blue); box-shadow:0 0 12px rgba(79,142,247,0.3); }
+.toggle-sw::after { content:''; width:18px; height:18px; background:rgba(255,255,255,0.95); border-radius:50%; position:absolute; top:2px; left:2px; transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow:0 1px 4px rgba(0,0,0,0.3); }
+.toggle-sw.on::after { transform:translateX(18px); }
+
+.sensor-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.sensor-item {
+  background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:12px; position:relative; overflow:hidden;
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.sensor-item:hover { transform:translateY(-2px); box-shadow:var(--shadow-sm); }
+.sensor-item::before {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(79,142,247,0.3), transparent);
+}
+.sensor-lbl { font-family:var(--fm); font-size:9px; color:var(--t3); letter-spacing:1.2px; text-transform:uppercase; margin-bottom:6px; }
+.sensor-val { font-family:var(--fd); font-size:20px; font-weight:700; }
+.v-ok    { color:var(--green); }
+.v-warn  { color:var(--amber); }
+.v-alert { color:var(--red); }
+.v-blue  { color:var(--blue-bright); }
+
+.alert-feed { display:flex; flex-direction:column; gap:6px; }
+.alert-row {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:10px 12px; border-radius:var(--r-sm);
+  background:var(--bg-surface); border:1px solid var(--border);
+  border-left-width:3px; transition:transform 0.15s;
+}
+.alert-row:hover { transform:translateX(2px); }
+.alert-row.amber { border-left-color:var(--amber); background:rgba(245,166,35,0.04); }
+.alert-row.red   { border-left-color:var(--red); background:rgba(255,77,77,0.04); }
+.alert-row.blue  { border-left-color:var(--blue); background:rgba(79,142,247,0.04); }
+.alert-row.green { border-left-color:var(--green); background:rgba(45,216,133,0.04); }
+.alert-body { flex:1; font-size:12px; color:var(--t2); line-height:1.5; }
+.alert-time { font-family:var(--fm); font-size:9px; color:var(--t3); margin-top:3px; }
+
+.info-table { width:100%; }
+.info-table tr td { padding:6px 0; font-size:12px; }
+.info-table tr td:first-child { color:var(--t3); width:50%; font-weight:500; }
+.info-table tr td:last-child { color:var(--t1); text-align:right; font-family:var(--fm); font-size:11px; }
+
+/* AI Insight Box in Drive sidebar */
+.ai-insight-mini {
+  background:linear-gradient(135deg, rgba(79,142,247,0.06), rgba(167,139,250,0.04));
+  border:1px solid rgba(79,142,247,0.2); border-radius:var(--r-md);
+  padding:12px 14px; position:relative; overflow:hidden;
+}
+.ai-insight-mini::before {
+  content:''; position:absolute; top:-20px; right:-20px;
+  width:80px; height:80px; border-radius:50%;
+  background:radial-gradient(circle, rgba(79,142,247,0.1), transparent);
+}
+.ai-mini-label { font-family:var(--fd); font-size:9px; font-weight:700; color:var(--blue-bright); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+.ai-mini-text { font-size:11px; color:var(--t2); line-height:1.6; }
+.ai-mini-text strong { color:var(--t1); }
+
+/* ══════════════════════
+   TAX PANEL
+══════════════════════ */
+#tax-panel { flex-direction:column; overflow-y:auto; padding:32px 40px; gap:18px; }
+
+/* AI INSIGHT HERO CARD */
+.ai-hero-card {
+  background: linear-gradient(135deg, rgba(79,142,247,0.08), rgba(167,139,250,0.05), rgba(45,216,133,0.04));
+  border:1px solid rgba(79,142,247,0.25);
+  border-radius:var(--r-2xl); padding:22px 28px;
+  flex-shrink:0; position:relative; overflow:hidden;
+  box-shadow: 0 4px 32px rgba(79,142,247,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.ai-hero-card:hover { transform:translateY(-2px); box-shadow:0 8px 48px rgba(79,142,247,0.12); }
+.ai-hero-card::before {
+  content:''; position:absolute; top:-60px; right:-60px;
+  width:200px; height:200px; border-radius:50%;
+  background:radial-gradient(circle, rgba(79,142,247,0.12), transparent 70%);
+}
+.ai-hero-card::after {
+  content:''; position:absolute; bottom:-40px; left:100px;
+  width:150px; height:150px; border-radius:50%;
+  background:radial-gradient(circle, rgba(167,139,250,0.08), transparent 70%);
+}
+.ai-hero-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; position:relative; z-index:1; }
+.ai-hero-badge { display:flex; align-items:center; gap:8px; }
+.ai-spark-icon { width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,rgba(79,142,247,0.3),rgba(167,139,250,0.2)); border:1px solid rgba(79,142,247,0.3); display:flex; align-items:center; justify-content:center; }
+.ai-spark-icon svg { width:14px; height:14px; fill:none; stroke:var(--blue-bright); stroke-width:2; stroke-linecap:round; }
+.ai-hero-label { font-family:var(--fd); font-size:11px; font-weight:700; color:var(--blue-bright); letter-spacing:1px; text-transform:uppercase; }
+.ai-refresh { font-family:var(--fm); font-size:9px; color:var(--t3); }
+.ai-hero-text { font-size:14px; line-height:1.8; color:var(--t2); position:relative; z-index:1; }
+.ai-hero-text strong { color:var(--t1); font-weight:600; }
+.ai-hero-text .hl-red { color:var(--red); font-weight:600; }
+.ai-hero-text .hl-amber { color:var(--amber); font-weight:600; }
+.ai-hero-text .hl-green { color:var(--green); font-weight:600; }
+.ai-hero-pills { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; position:relative; z-index:1; }
+.ai-pill { padding:4px 12px; border-radius:20px; font-family:var(--fm); font-size:10px; cursor:pointer; transition:all 0.15s; }
+.ai-pill-red { background:var(--red-dim); border:1px solid rgba(255,77,77,0.25); color:var(--red); }
+.ai-pill-amber { background:var(--amber-dim); border:1px solid rgba(245,166,35,0.25); color:var(--amber); }
+.ai-pill-blue { background:var(--blue-dim); border:1px solid rgba(79,142,247,0.25); color:var(--blue-bright); }
+.ai-pill:hover { filter:brightness(1.2); transform:translateY(-1px); }
+
+.tax-header { display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; }
+.tax-title-group h1 { font-family:var(--fd); font-size:32px; font-weight:800; letter-spacing:-1px; color:var(--t1); line-height:1.05; }
+.tax-title-group h1 span { color:var(--blue-bright); }
+.tax-title-group p { font-size:13px; color:var(--t3); margin-top:6px; font-family:var(--fm); letter-spacing:0.3px; }
+.btn-group { display:flex; gap:8px; align-items:center; }
+.btn { padding:9px 18px; border-radius:var(--r-sm); cursor:pointer; font-family:var(--fd); font-size:12px; font-weight:600; transition:all 0.2s; border:1px solid; }
+.btn-ghost-red { border-color:rgba(255,77,77,0.25); color:var(--red); background:transparent; }
+.btn-ghost-red:hover { background:var(--red-dim); box-shadow:0 0 16px rgba(255,77,77,0.1); }
+.btn-ghost-blue { border-color:rgba(79,142,247,0.25); color:var(--blue-bright); background:transparent; }
+.btn-ghost-blue:hover { background:var(--blue-dim); box-shadow:0 0 16px rgba(79,142,247,0.1); }
+
+/* NH PILLS */
+.nh-pills { display:flex; gap:8px; flex-wrap:wrap; flex-shrink:0; }
+.nh-pill {
+  padding:8px 20px; border-radius:20px; border:1px solid var(--border);
+  background:transparent; cursor:pointer; transition:all 0.2s;
+  font-family:var(--fd); font-size:12px; font-weight:600; color:var(--t3);
+}
+.nh-pill:hover { border-color:var(--border-str); color:var(--t2); transform:translateY(-1px); }
+.nh-pill.active { border-color:var(--blue); background:var(--blue-dim); color:var(--t1); box-shadow:0 0 16px rgba(79,142,247,0.12); }
+.nh-pill .sub { display:block; font-size:10px; opacity:0.6; margin-top:1px; font-family:var(--fm); font-weight:400; }
+
+/* QUICK STATS — HERO TIER */
+.qs-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; flex-shrink:0; }
+.qs-card {
+  border-radius:var(--r-xl); padding:20px 22px; position:relative; overflow:hidden;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.qs-card:hover { transform:translateY(-3px); }
+.qs-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; bottom:0; opacity:0.5;
+  background:inherit; filter:blur(0); z-index:0;
+}
+.qs-card > * { position:relative; z-index:1; }
+.qs-card-blue {
+  background:linear-gradient(135deg, rgba(79,142,247,0.12), rgba(79,142,247,0.04));
+  border:1px solid rgba(79,142,247,0.2);
+  box-shadow:0 4px 24px rgba(79,142,247,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.qs-card-amber {
+  background:linear-gradient(135deg, rgba(245,166,35,0.12), rgba(245,166,35,0.04));
+  border:1px solid rgba(245,166,35,0.2);
+  box-shadow:0 4px 24px rgba(245,166,35,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.qs-card-red {
+  background:linear-gradient(135deg, rgba(255,77,77,0.12), rgba(255,77,77,0.04));
+  border:1px solid rgba(255,77,77,0.2);
+  box-shadow:0 4px 24px rgba(255,77,77,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.qs-card-slate {
+  background:linear-gradient(135deg, rgba(100,116,139,0.12), rgba(100,116,139,0.04));
+  border:1px solid rgba(100,116,139,0.2);
+  box-shadow:0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.qs-label { font-family:var(--fd); font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:10px; display:block; opacity:0.7; }
+.qs-val { font-family:var(--fd); font-size:32px; font-weight:800; letter-spacing:-1.5px; line-height:1; }
+.qs-val.blue{color:var(--blue-bright)} .qs-val.amber{color:var(--amber)} .qs-val.red{color:var(--red)} .qs-val.slate{color:var(--t2)}
+.qs-sub { font-size:11px; color:var(--t3); margin-top:6px; }
+.qs-icon { position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; opacity:0.4; }
+
+/* SCORE GRID — ELEVATED */
+.score-grid { display:grid; grid-template-columns:300px 1fr; gap:16px; flex-shrink:0; }
+.gauge-card {
+  background:var(--bg-raised);
+  border:1px solid var(--border-hero);
+  border-radius:var(--r-2xl);
+  padding:22px; display:flex; flex-direction:column; align-items:center;
+  box-shadow:var(--shadow-hero);
+  position:relative; overflow:hidden;
+  transition:transform 0.2s;
+}
+.gauge-card:hover { transform:translateY(-2px); }
+.gauge-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at top, rgba(79,142,247,0.05), transparent 60%);
+}
+.gauge-card > * { position:relative; z-index:1; }
+.gauge-title { font-family:var(--fd); font-size:12px; font-weight:700; color:var(--t2); letter-spacing:0.3px; margin-bottom:16px; text-align:center; text-transform:uppercase; }
+#cgauge { width:190px; height:190px; }
+.score-display { text-align:center; margin-top:6px; }
+.score-num { font-family:var(--fd); font-size:64px; font-weight:800; letter-spacing:-3px; color:var(--red); line-height:1; transition:color 0.5s; }
+.score-denom { font-family:var(--fm); font-size:11px; color:var(--t3); margin-top:3px; }
+.score-badge-wrap { margin-top:10px; }
+.score-src { margin-top:14px; padding:10px 14px; background:var(--bg-surface); border-radius:var(--r-sm); border:1px solid var(--border); font-family:var(--fm); font-size:10px; color:var(--t3); text-align:center; line-height:2; width:100%; }
+
+/* METRICS CARD */
+.metrics-card {
+  background:var(--bg-raised); border:1px solid var(--border-hero);
+  border-radius:var(--r-2xl); padding:22px;
+  box-shadow:var(--shadow-hero);
+  position:relative; overflow:hidden;
+}
+.metrics-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at top right, rgba(167,139,250,0.04), transparent 60%);
+}
+.metrics-card > * { position:relative; z-index:1; }
+.metrics-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.metrics-header-title { font-family:var(--fd); font-size:12px; font-weight:700; color:var(--t2); text-transform:uppercase; letter-spacing:0.5px; }
+.metric-row-item { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid rgba(255,255,255,0.035); }
+.metric-row-item:last-of-type { border-bottom:none; }
+.metric-info { flex:1; min-width:0; }
+.metric-name { font-size:13px; font-weight:600; color:var(--t1); }
+.metric-desc { font-size:11px; color:var(--t3); margin-top:2px; }
+.metric-track { width:140px; height:4px; background:var(--bg-overlay); border-radius:2px; flex-shrink:0; overflow:hidden; }
+.metric-fill { height:100%; border-radius:2px; width:0; transition:width 1.8s cubic-bezier(0.4,0,0.2,1); box-shadow:0 0 8px currentColor; }
+.metric-score-lbl { font-family:var(--fd); font-size:14px; font-weight:700; width:30px; text-align:right; flex-shrink:0; }
+.metric-weight { font-family:var(--fm); font-size:10px; color:var(--t3); width:36px; text-align:right; flex-shrink:0; }
+.formula-block { margin-top:16px; padding:14px 16px; background:var(--bg-surface); border-radius:var(--r-md); border:1px solid var(--border); font-family:var(--fm); font-size:10px; color:var(--t3); line-height:2.2; }
+.formula-result { color:var(--red); font-size:15px; font-weight:700; }
+
+/* CHARTS */
+.charts-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; flex-shrink:0; }
+.charts-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; flex-shrink:0; }
+.chart-card {
+  background:var(--bg-raised); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:18px 20px;
+  transition:transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.chart-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); border-color:var(--border-md); }
+.chart-card .chart-title { font-family:var(--fd); font-size:11px; font-weight:700; color:var(--t2); letter-spacing:0.3px; text-transform:uppercase; margin-bottom:14px; }
+
+/* FACTS + TIMELINE */
+.bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; flex-shrink:0; }
+.fact-card {
+  background:var(--bg-raised); border:1px solid var(--border);
+  border-left:3px solid var(--blue-bright); border-radius:var(--r-xl);
+  padding:18px 20px; position:relative; overflow:hidden;
+  transition:transform 0.2s;
+}
+.fact-card:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+.fact-card::before {
+  content:''; position:absolute; top:0; left:0; bottom:0; width:3px;
+  background:linear-gradient(180deg, var(--blue-bright), var(--purple));
+}
+.fact-lbl { font-family:var(--fd); font-size:10px; font-weight:700; color:var(--blue-bright); letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.fact-text { display:none; font-size:13px; line-height:1.9; color:var(--t2); }
+.fact-text.active { display:block; animation:fade-up 0.5s ease; }
+.fact-hl { color:var(--red); font-weight:600; }
+@keyframes fade-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.timeline-card {
+  background:var(--bg-raised); border:1px solid var(--border);
+  border-radius:var(--r-xl); padding:18px 20px;
+  transition:transform 0.2s;
+}
+.timeline-card:hover { transform:translateY(-2px); }
+.tl-title { font-family:var(--fd); font-size:10px; font-weight:700; color:var(--t3); letter-spacing:1px; text-transform:uppercase; margin-bottom:16px; }
+.tl-item { display:flex; gap:14px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.03); position:relative; }
+.tl-item:last-child { border-bottom:none; }
+.tl-item::before { content:''; position:absolute; left:2px; top:18px; bottom:-10px; width:1px; background:var(--border); }
+.tl-item:last-child::before { display:none; }
+.tl-dot { width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.tl-dot.r{background:var(--red);box-shadow:0 0 6px var(--red)} .tl-dot.a{background:var(--amber);box-shadow:0 0 6px var(--amber)} .tl-dot.g{background:var(--green);box-shadow:0 0 6px var(--green)}
+.tl-body { flex:1; }
+.tl-date { font-family:var(--fm); font-size:10px; color:var(--t3); margin-bottom:2px; }
+.tl-event { font-size:12px; font-weight:500; color:var(--t2); line-height:1.4; }
+.tl-amount { font-family:var(--fd); font-size:12px; font-weight:700; flex-shrink:0; align-self:center; }
+
+/* RAW DATA */
+.raw-card { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--r-xl); overflow:hidden; flex-shrink:0; }
+.raw-card-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); }
+.raw-title-text { font-family:var(--fd); font-size:13px; font-weight:600; color:var(--t2); }
+.raw-toggle-btn { font-family:var(--fd); font-size:12px; font-weight:600; color:var(--blue-bright); background:none; border:none; cursor:pointer; padding:5px 10px; border-radius:6px; transition:background 0.15s; }
+.raw-toggle-btn:hover { background:var(--blue-dim); }
+.data-table { width:100%; border-collapse:collapse; font-family:var(--fm); font-size:11px; }
+.data-table th { background:var(--bg-surface); padding:10px 16px; text-align:left; color:var(--t3); font-size:9px; letter-spacing:1.2px; text-transform:uppercase; font-weight:500; }
+.data-table td { padding:10px 16px; border-top:1px solid rgba(255,255,255,0.025); color:var(--t2); }
+.data-table tbody tr { transition:background 0.1s; }
+.data-table tbody tr:hover td { background:rgba(79,142,247,0.04); }
+.td-r{color:var(--red)} .td-a{color:var(--amber)} .td-g{color:var(--green)}
+
+/* ══════════════════════
+   ALERTS PANEL
+══════════════════════ */
+#alerts-panel { flex-direction:column; overflow-y:auto; padding:32px 40px; gap:18px; }
+.stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; flex-shrink:0; }
+.stat-card {
+  border-radius:var(--r-xl); padding:22px; position:relative; overflow:hidden;
+  transition:transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-md); }
+.stat-card-bg {
+  background:var(--bg-raised); border:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+}
+.stat-num { font-family:var(--fd); font-size:48px; font-weight:800; letter-spacing:-2px; line-height:1; }
+.stat-desc { font-family:var(--fd); font-size:10px; font-weight:700; color:var(--t3); letter-spacing:1px; text-transform:uppercase; margin-top:8px; }
+
+/* ══════════════════════
+   CHATBOT
+══════════════════════ */
+#chatbot {
+  position:fixed; inset:0; z-index:1000;
+  display:none; flex-direction:row;
+  background:rgba(5,5,8,0.97);
+  backdrop-filter:blur(24px);
+}
+#chatbot.open { display:flex; animation:fade-in 0.25s; }
+.chat-sidebar {
+  width:264px; flex-shrink:0;
+  background:var(--bg-raised); border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+}
+.chat-sidebar-top {
+  padding:20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:14px;
+  background:linear-gradient(135deg, rgba(79,142,247,0.06), transparent);
+}
+.chat-avatar {
+  width:42px; height:42px; border-radius:var(--r-sm); flex-shrink:0;
+  background:linear-gradient(135deg, #1a3a8f, var(--blue));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 16px rgba(79,142,247,0.3);
+}
+.chat-avatar svg { width:18px; height:18px; fill:none; stroke:#fff; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.chat-agent-name { font-family:var(--fd); font-size:15px; font-weight:700; color:var(--t1); }
+.chat-agent-sub { font-family:var(--fm); font-size:10px; color:var(--blue-bright); margin-top:2px; }
+.chat-topics { padding:16px; flex:1; overflow-y:auto; }
+.chat-topics-lbl { font-family:var(--fd); font-size:9px; font-weight:700; color:var(--t3); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
+.topic-pill {
+  display:block; width:100%; text-align:left; padding:10px 12px;
+  border-radius:var(--r-sm); border:1px solid var(--border);
+  background:transparent; color:var(--t3); cursor:pointer;
+  font-size:12px; font-family:var(--ff); font-weight:500;
+  transition:all 0.15s; margin-bottom:6px; line-height:1.4;
+}
+.topic-pill:hover { border-color:rgba(79,142,247,0.35); color:var(--t2); background:var(--blue-dim); transform:translateX(3px); }
+.chat-footer { padding:14px 16px; border-top:1px solid var(--border); font-family:var(--fm); font-size:9px; color:var(--t4); line-height:1.8; }
+.chat-main { flex:1; display:flex; flex-direction:column; }
+.chat-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  height:64px; padding:0 28px;
+  border-bottom:1px solid var(--border);
+  background:rgba(5,5,8,0.6); backdrop-filter:blur(20px); flex-shrink:0;
+}
+.chat-topbar-left { display:flex; align-items:center; gap:12px; }
+.chat-topbar-title { font-family:var(--fd); font-size:16px; font-weight:700; color:var(--t1); }
+.chat-status { display:flex; align-items:center; gap:6px; font-family:var(--fm); font-size:10px; color:var(--green); }
+.chat-close-btn {
+  width:34px; height:34px; border-radius:var(--r-sm);
+  background:var(--bg-surface); border:1px solid var(--border);
+  color:var(--t3); font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+}
+.chat-close-btn:hover { border-color:rgba(255,77,77,0.4); color:var(--red); background:var(--red-dim); }
+.chat-messages { flex:1; overflow-y:auto; padding:24px 28px; display:flex; flex-direction:column; gap:18px; }
+.msg { display:flex; gap:12px; max-width:680px; }
+.msg.user { align-self:flex-end; flex-direction:row-reverse; max-width:600px; }
+.msg-av { width:34px; height:34px; border-radius:var(--r-sm); flex-shrink:0; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#1a3a8f,var(--blue)); box-shadow:0 0 12px rgba(79,142,247,0.2); }
+.msg-av svg { width:15px; height:15px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.msg.user .msg-av { background:var(--bg-surface); border:1px solid var(--border); box-shadow:none; }
+.msg.user .msg-av svg { stroke:var(--t3); }
+.msg-bubble { background:var(--bg-raised); border:1px solid var(--border); border-radius:var(--r-md); padding:14px 18px; font-size:13px; line-height:1.8; color:var(--t1); }
+.msg.user .msg-bubble { background:var(--blue-dim); border-color:rgba(79,142,247,0.2); }
+.msg-time { font-family:var(--fm); font-size:9px; color:var(--t3); margin-top:6px; }
+.typing { display:flex; gap:5px; padding:4px 0; }
+.td { width:7px; height:7px; border-radius:50%; background:var(--blue); animation:tdb 1.2s infinite; }
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes tdb { 0%,100%{transform:translateY(0);opacity:0.3} 50%{transform:translateY(-6px);opacity:1} }
+.chat-input-area { padding:16px 28px; border-top:1px solid var(--border); background:rgba(5,5,8,0.4); flex-shrink:0; }
+.chat-input-wrap {
+  display:flex; align-items:center; gap:12px;
+  background:var(--bg-surface); border:1px solid var(--border-md);
+  border-radius:var(--r-md); padding:11px 16px; transition:border-color 0.15s, box-shadow 0.15s;
+}
+.chat-input-wrap:focus-within { border-color:rgba(79,142,247,0.4); box-shadow:0 0 20px rgba(79,142,247,0.08); }
+.wave { display:flex; align-items:center; gap:3px; height:20px; opacity:0; transition:opacity 0.2s; }
+.wave.active { opacity:1; }
+.wb { width:2px; border-radius:2px; background:var(--blue); animation:wba 1.2s ease-in-out infinite; }
+.wb:nth-child(1){height:4px;animation-delay:0s}.wb:nth-child(2){height:10px;animation-delay:.1s}.wb:nth-child(3){height:16px;animation-delay:.2s}.wb:nth-child(4){height:10px;animation-delay:.3s}.wb:nth-child(5){height:4px;animation-delay:.4s}
+@keyframes wba { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1.5)} }
+#cbinput { flex:1; background:none; border:none; outline:none; color:var(--t1); font-family:var(--ff); font-size:13px; }
+#cbinput::placeholder { color:var(--t3); }
+.chat-send-btn {
+  width:36px; height:36px; border-radius:var(--r-sm); background:linear-gradient(135deg,#1a3a8f,var(--blue));
+  border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s; flex-shrink:0; box-shadow:0 0 12px rgba(79,142,247,0.25);
+}
+.chat-send-btn:hover { transform:scale(1.05); box-shadow:0 0 20px rgba(79,142,247,0.4); }
+.chat-send-btn svg { width:14px; height:14px; fill:none; stroke:#fff; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+
+/* MODAL */
+.modal-ov { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:500; display:none; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+.modal-ov.open { display:flex; animation:fade-in 0.2s; }
+.modal-box { background:var(--bg-raised); border:1px solid var(--border-hero); border-radius:var(--r-2xl); padding:32px 36px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:var(--shadow-hero); }
+.modal-box h2 { font-family:var(--fd); font-size:24px; font-weight:800; letter-spacing:-0.5px; margin-bottom:18px; }
+.modal-box p, .modal-box li { font-size:13px; line-height:1.9; color:var(--t2); margin-bottom:8px; }
+.modal-box ul { padding-left:20px; }
+.modal-box p.section-heading { color:var(--t1); font-weight:700; font-family:var(--fd); margin-top:16px; font-size:14px; }
+.modal-close { margin-top:22px; padding:11px 24px; background:linear-gradient(135deg,#1a3a8f,var(--blue)); color:#fff; border:none; border-radius:var(--r-sm); cursor:pointer; font-family:var(--fd); font-size:13px; font-weight:700; transition:all 0.15s; box-shadow:0 0 20px rgba(79,142,247,0.2); }
+.modal-close:hover { transform:translateY(-1px); box-shadow:0 0 30px rgba(79,142,247,0.3); }
+
+@keyframes fade-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+/* ══════════════════════
+   COMPLAINT PORTAL
+══════════════════════ */
+#complaints-panel {
+  flex-direction: column; overflow-y: auto;
+  padding: 32px 40px; gap: 20px;
+  background: var(--bg-void);
+}
+.cp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex-shrink: 0; }
+.cp-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; flex-shrink: 0; }
+.cp-full { flex-shrink: 0; }
+.cp-card {
+  background: var(--bg-raised); border: 1px solid var(--border-hero);
+  border-radius: var(--r-2xl); padding: 24px 28px;
+  position: relative; overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cp-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hero); }
+.cp-card::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(79,142,247,0.04), transparent 60%);
+  pointer-events: none;
+}
+.cp-section-title {
+  font-family: var(--fd); font-size: 11px; font-weight: 700;
+  color: var(--t3); letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 18px; display: flex; align-items: center; gap: 10px;
+}
+.cp-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ROUTER HERO */
+.router-hero {
+  background: linear-gradient(135deg, rgba(79,142,247,0.10), rgba(167,139,250,0.06), rgba(45,216,133,0.04));
+  border: 1px solid rgba(79,142,247,0.28); border-radius: var(--r-2xl);
+  padding: 28px 32px; flex-shrink: 0; position: relative; overflow: hidden;
+  box-shadow: 0 4px 40px rgba(79,142,247,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.router-hero::before {
+  content: ''; position: absolute; top: -80px; right: -80px;
+  width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(79,142,247,0.10), transparent 70%);
+}
+.router-title { font-family: var(--fd); font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+.router-title span { color: var(--blue-bright); }
+.router-sub { font-size: 13px; color: var(--t3); margin-bottom: 22px; font-family: var(--fm); }
+.router-steps { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+.router-step {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border-md);
+  border-radius: var(--r-md); padding: 12px 16px; flex: 1; min-width: 180px;
+}
+.router-step-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue-dim); border: 1px solid rgba(79,142,247,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--fd); font-size: 13px; font-weight: 800; color: var(--blue-bright);
+  flex-shrink: 0;
+}
+.router-step-text { font-size: 12px; color: var(--t2); font-weight: 500; line-height: 1.4; }
+
+.router-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; position: relative; z-index: 1; }
+.rf-group { display: flex; flex-direction: column; gap: 7px; flex: 1; min-width: 150px; }
+.rf-label { font-family: var(--fm); font-size: 10px; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; }
+.rf-select, .rf-input {
+  background: rgba(5,5,8,0.8); border: 1px solid var(--border-md);
+  border-radius: var(--r-sm); padding: 10px 14px;
+  color: var(--t1); font-family: var(--ff); font-size: 13px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+.rf-select:focus, .rf-input:focus {
+  border-color: rgba(79,142,247,0.5);
+  box-shadow: 0 0 0 3px rgba(79,142,247,0.08);
+}
+.rf-select option { background: #0c0c18; }
+.route-btn {
+  padding: 11px 24px; border-radius: var(--r-sm); border: none; cursor: pointer;
+  background: linear-gradient(135deg, #1a3a8f, var(--blue));
+  color: #fff; font-family: var(--fd); font-size: 13px; font-weight: 700;
+  transition: all 0.2s; box-shadow: 0 0 20px rgba(79,142,247,0.25);
+  display: flex; align-items: center; gap: 8px; white-space: nowrap;
+}
+.route-btn:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(79,142,247,0.4); }
+.route-btn svg { width: 14px; height: 14px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ROUTED AUTHORITY RESULT */
+.authority-result {
+  display: none; margin-top: 18px; padding: 20px 22px;
+  background: rgba(45,216,133,0.06); border: 1px solid rgba(45,216,133,0.28);
+  border-radius: var(--r-xl); animation: fade-up 0.4s ease;
+  position: relative; z-index: 1;
+}
+.authority-result.show { display: block; }
+.ar-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.ar-badge { display: flex; align-items: center; gap: 8px; }
+.ar-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse-dot 1.5s infinite; box-shadow: 0 0 8px var(--green); }
+.ar-label { font-family: var(--fd); font-size: 12px; font-weight: 700; color: var(--green); letter-spacing: 0.5px; text-transform: uppercase; }
+.ar-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.ar-item label { font-family: var(--fm); font-size: 9px; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.ar-item span { font-size: 13px; color: var(--t1); font-weight: 500; }
+.ar-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.ar-action-btn {
+  padding: 9px 18px; border-radius: var(--r-sm); cursor: pointer;
+  font-family: var(--fd); font-size: 12px; font-weight: 600;
+  transition: all 0.15s; border: 1px solid; display: flex; align-items: center; gap: 7px;
+}
+.ar-action-btn svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.btn-file { border-color: rgba(79,142,247,0.4); color: var(--blue-bright); background: var(--blue-dim); }
+.btn-file:hover { background: rgba(79,142,247,0.18); }
+.btn-escalate { border-color: rgba(245,166,35,0.4); color: var(--amber); background: var(--amber-dim); }
+.btn-escalate:hover { background: rgba(245,166,35,0.18); }
+.btn-rti { border-color: rgba(167,139,250,0.4); color: var(--purple); background: var(--purple-dim); }
+.btn-rti:hover { background: rgba(167,139,250,0.18); }
+
+/* AUTHORITY DIRECTORY */
+.authority-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.authority-table th {
+  background: var(--bg-surface); padding: 11px 16px; text-align: left;
+  color: var(--t3); font-family: var(--fm); font-size: 9px; letter-spacing: 1.2px;
+  text-transform: uppercase; font-weight: 400;
+}
+.authority-table td { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.03); color: var(--t2); vertical-align: middle; }
+.authority-table tbody tr { transition: background 0.15s; cursor: default; }
+.authority-table tbody tr:hover td { background: rgba(79,142,247,0.04); }
+.auth-name { font-size: 13px; font-weight: 600; color: var(--t1); margin-bottom: 2px; }
+.auth-dept { font-family: var(--fm); font-size: 10px; color: var(--t3); }
+.level-dot { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 12px; font-family: var(--fm); font-size: 10px; font-weight: 500; }
+.level-national { background: var(--blue-dim); border: 1px solid rgba(79,142,247,0.2); color: var(--blue-bright); }
+.level-state    { background: var(--purple-dim); border: 1px solid rgba(167,139,250,0.2); color: var(--purple); }
+.level-district { background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.2); color: var(--amber); }
+.level-vigilance { background: var(--red-dim); border: 1px solid rgba(255,77,77,0.2); color: var(--red); }
+.copy-btn {
+  padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border);
+  background: transparent; color: var(--t3); font-family: var(--fm); font-size: 10px;
+  cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px;
+}
+.copy-btn:hover { border-color: var(--blue); color: var(--blue-bright); background: var(--blue-dim); }
+.copy-btn svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+/* STATS ROW */
+.cstat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; flex-shrink: 0; }
+.cstat-card {
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 20px 22px;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s;
+}
+.cstat-card:hover { transform: translateY(-2px); }
+.cstat-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.cstat-card.c-blue::after { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+.cstat-card.c-red::after { background: var(--red); box-shadow: 0 0 8px var(--red); }
+.cstat-card.c-green::after { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.cstat-card.c-amber::after { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.cstat-num { font-family: var(--fd); font-size: 36px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; margin-bottom: 6px; }
+.cstat-lbl { font-family: var(--fm); font-size: 9px; color: var(--t3); letter-spacing: 1.5px; text-transform: uppercase; }
+.cstat-trend { font-family: var(--fm); font-size: 10px; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+
+/* PROCESS TIMELINE (horizontal) */
+.process-flow { display: flex; align-items: flex-start; gap: 0; overflow-x: auto; padding: 8px 0 12px; }
+.pf-step { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 120px; position: relative; }
+.pf-step:not(:last-child)::after {
+  content: ''; position: absolute; top: 18px; left: calc(50% + 18px); right: calc(-50% + 18px);
+  height: 2px; background: linear-gradient(to right, var(--border-md), var(--border));
+}
+.pf-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-size: 15px; border: 2px solid; position: relative; z-index: 1;
+  background: var(--bg-raised);
+}
+.pf-icon.done { border-color: var(--green); background: rgba(45,216,133,0.1); }
+.pf-icon.active { border-color: var(--blue); background: rgba(79,142,247,0.12); animation: pulse-border 2s infinite; }
+.pf-icon.pending { border-color: var(--border-md); }
+@keyframes pulse-border { 0%,100%{box-shadow:0 0 0 0 rgba(79,142,247,0)} 50%{box-shadow:0 0 0 6px rgba(79,142,247,0.12)} }
+.pf-label { font-family: var(--fm); font-size: 9px; color: var(--t3); letter-spacing: 0.5px; text-align: center; line-height: 1.4; }
+.pf-label strong { display: block; font-size: 10px; color: var(--t2); margin-bottom: 1px; font-weight: 600; }
+
+/* COMPLAINT FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-full { grid-column: 1 / -1; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
+.form-label { font-family: var(--fm); font-size: 10px; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; }
+.form-input, .form-textarea, .form-select {
+  background: var(--bg-surface); border: 1px solid var(--border-md);
+  border-radius: var(--r-sm); padding: 11px 14px;
+  color: var(--t1); font-family: var(--ff); font-size: 13px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s; resize: none;
+  -webkit-appearance: none;
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--t3); }
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+  border-color: rgba(79,142,247,0.5); box-shadow: 0 0 0 3px rgba(79,142,247,0.06);
+}
+.form-textarea { min-height: 90px; }
+.form-select option { background: #111120; }
+.submit-btn {
+  width: 100%; padding: 14px; border-radius: var(--r-sm); border: none; cursor: pointer;
+  background: linear-gradient(135deg, #1a3a8f, var(--blue));
+  color: #fff; font-family: var(--fd); font-size: 14px; font-weight: 700;
+  transition: all 0.2s; margin-top: 6px;
+  box-shadow: 0 0 24px rgba(79,142,247,0.2);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 0 40px rgba(79,142,247,0.35); }
+.submit-btn.submitted { background: linear-gradient(135deg, #0d6e3a, var(--green)); box-shadow: 0 0 24px rgba(45,216,133,0.2); }
+.submit-btn svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.char-count { font-family: var(--fm); font-size: 9px; color: var(--t3); text-align: right; margin-top: 4px; }
+
+/* Success toast */
+.toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+  background: rgba(45,216,133,0.12); border: 1px solid rgba(45,216,133,0.4);
+  border-radius: var(--r-md); padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 13px; color: var(--t1); font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(12px);
+  animation: toast-in 0.4s cubic-bezier(0.4,0,0.2,1);
+  max-width: 360px;
+}
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast-close { margin-left: auto; width: 24px; height: 24px; border-radius: 4px; background: none; border: none; color: var(--t3); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+@keyframes toast-in { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+
+/* Counter animation */
+@keyframes count-up { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.counting { animation: count-up 0.6s ease; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 12h18M3 12c0-3 3-9 9-9s9 6 9 9M3 12c0 3 3 9 9 9s9-6 9-9"/></svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-wordmark">Road<span>Watch</span></div>
+      <div class="logo-sub">India Road Intelligence</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="switchTab('drive',this)">
+      <svg viewBox="0 0 24 24"><rect x="1" y="8" width="22" height="12" rx="3"/><path d="M5 8V6a2 2 0 012-2h10a2 2 0 012 2v2"/><circle cx="8" cy="14" r="1.5"/><circle cx="16" cy="14" r="1.5"/></svg>
+      Drive
+    </button>
+    <button class="nav-btn" onclick="switchTab('tax',this)">
+      <svg viewBox="0 0 24 24"><path d="M9 14l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+      Tax Trail
+    </button>
+    <button class="nav-btn" onclick="switchTab('alerts',this)">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      Alerts
+    </button>
+    <button class="nav-btn" onclick="switchTab('complaints',this)">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+  Complaint Portal
+</button>
+  </nav>
+
+  <div class="hdr-right">
+    <div class="pill"><div class="dot-live"></div>Live</div>
+    <div class="pill" id="loc-pill">NH-48 · KM 234</div>
+    <button class="ask-btn" onclick="toggleChat()">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      Ask AI
+      <div class="ask-btn-spark"></div>
+    </button>
+  </div>
+</header>
+
+<div class="main">
+
+<!-- ── DRIVE PANEL ── -->
+<div id="drive-panel" class="panel active">
+  <div class="drive-3d">
+    <canvas id="threec"></canvas>
+
+    <!-- Clickable hotspots -->
+    <div class="hotspot" id="hs1" style="top:38%;left:44%" onclick="showHotspot('pothole')">
+      <div class="hotspot-dot red"></div>
+      <div class="hotspot-label">⚠ Pothole cluster — KM 232</div>
+    </div>
+    <div class="hotspot" id="hs2" style="top:45%;left:55%" onclick="showHotspot('fog')">
+      <div class="hotspot-dot blue"></div>
+      <div class="hotspot-label">🌫 Fog zone — 340m visibility</div>
+    </div>
+    <div class="hotspot" id="hs3" style="top:35%;left:52%" onclick="showHotspot('repair')">
+      <div class="hotspot-dot amber"></div>
+      <div class="hotspot-label">🔧 Repair anomaly — 7× same stretch</div>
+    </div>
+
+    <!-- Telemetry center strip -->
+    <div class="telemetry-strip">
+      <div class="tele-item">
+        <div class="tele-val v-blue" id="tele-speed">82</div>
+        <div class="tele-lbl">km/h</div>
+      </div>
+      <div class="tele-sep"></div>
+      <div class="tele-item">
+        <div class="tele-val v-warn" id="tele-vis">340m</div>
+        <div class="tele-lbl">Visibility</div>
+      </div>
+      <div class="tele-sep"></div>
+      <div class="tele-item">
+        <div class="tele-val v-warn" id="tele-fog">Mod</div>
+        <div class="tele-lbl">Fog</div>
+      </div>
+      <div class="tele-sep"></div>
+      <div class="tele-item">
+        <div class="tele-val v-ok">Dry</div>
+        <div class="tele-lbl">Surface</div>
+      </div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div class="hud-card">
+            <div class="hud-label">Speed</div>
+            <div class="hud-value" id="h-speed">82<span class="unit">km/h</span></div>
+          </div>
+          <div class="hud-card">
+            <div class="hud-label">Visibility</div>
+            <div class="hud-value" id="h-vis" style="color:var(--amber)">340<span class="unit">m</span></div>
+          </div>
+          <div class="hud-card">
+            <div class="hud-label">Mode</div>
+            <div class="hud-text v-blue" id="h-mode">Highway</div>
+          </div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-card">
+            <div class="hud-label">Fog</div>
+            <div class="hud-text v-warn" id="h-fog">Moderate</div>
+          </div>
+          <div class="hud-card">
+            <div class="hud-label">Road</div>
+            <div class="hud-text" style="color:var(--t1)">NH-48</div>
+          </div>
+        </div>
+      </div>
+      <div class="hud-bottom">
+        <div class="speedo">
+          <div class="speedo-num" id="speedo-num">82</div>
+          <div class="speedo-unit">KM/H</div>
+        </div>
+        <div class="warn-stack">
+          <div class="warn-banner wb-amber" id="wb-front">Slow vehicle ahead</div>
+          <div class="warn-banner wb-red" id="wb-rear">Fast approach — rear</div>
+          <div class="warn-banner wb-blue" id="wb-fog">High fog density</div>
+        </div>
+        <div style="background:rgba(5,5,8,0.8);border:1px solid var(--border-md);border-radius:var(--r-md);padding:12px 16px;backdrop-filter:blur(20px)">
+          <div class="hud-label">Fog density</div>
+          <div class="fog-bar"><div class="fog-fill" id="fog-fill" style="width:45%"></div></div>
+          <div style="font-family:var(--fm);font-size:10px;margin-top:7px;" id="fog-label"><span style="color:var(--amber)">Moderate</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="warn-overlay" id="warn-overlay"></div>
+    <canvas id="radar-canvas" style="position:absolute;bottom:16px;right:16px;width:120px;height:120px" width="120" height="120"></canvas>
+  </div>
+
+  <div class="drive-sidebar">
+    <div class="sb-group" style="padding-bottom:14px">
+      <div class="sb-group-title">Drive Modes</div>
+      <div class="toggle-row"><span class="toggle-label">Highway Mode</span><div class="toggle-sw on" id="tog-hw" onclick="toggleHW()"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Fog Detection</span><div class="toggle-sw on" id="tog-fog" onclick="toggleFog()"></div></div>
+      <div class="toggle-row"><span class="toggle-label">Collision Warnings</span><div class="toggle-sw on" id="tog-col" onclick="toggleCol()"></div></div>
+    </div>
+
+    <!-- AI Mini Insight -->
+    <div class="sb-group">
+      <div class="ai-insight-mini">
+        <div class="ai-mini-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          AI Insight
+        </div>
+        <div class="ai-mini-text" id="drive-ai-insight">
+          <strong>Anomaly detected</strong> on this stretch — same 20km resurfaced <strong style="color:var(--red)">7× in 4 years</strong>. Reduced brake efficiency possible near KM 232. Reduce speed.
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-group">
+      <div class="sb-group-title">Sensor Readings</div>
+      <div class="sensor-grid">
+        <div class="sensor-item"><div class="sensor-lbl">Front</div><div class="sensor-val v-warn" id="s-front">42m</div></div>
+        <div class="sensor-item"><div class="sensor-lbl">Rear</div><div class="sensor-val v-ok" id="s-rear">95m</div></div>
+        <div class="sensor-item"><div class="sensor-lbl">Fog Idx</div><div class="sensor-val v-warn" id="s-fog">0.45</div></div>
+        <div class="sensor-item"><div class="sensor-lbl">Surface</div><div class="sensor-val v-ok" id="s-surface">Dry</div></div>
+      </div>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-title">Live Alerts</div>
+      <div class="alert-feed" id="alert-feed">
+        <div class="alert-row amber"><div class="alert-body">Slow vehicle 42m ahead<div class="alert-time">Just now</div></div></div>
+        <div class="alert-row blue"><div class="alert-body">Highway mode active<div class="alert-time">2 min ago</div></div></div>
+        <div class="alert-row red"><div class="alert-body">Fog density rising<div class="alert-time">5 min ago</div></div></div>
+      </div>
+    </div>
+    <div class="sb-group">
+      <div class="sb-group-title">Road Information</div>
+      <table class="info-table">
+        <tr><td>Road</td><td>NH-48</td></tr>
+        <tr><td>Speed limit</td><td style="color:var(--green)">100 km/h</td></tr>
+        <tr><td>Last repair</td><td style="color:var(--amber)">Mar 2024</td></tr>
+        <tr><td>Contractor</td><td>M/s BRC Ltd</td></tr>
+        <tr><td>Potholes</td><td style="color:var(--red)">12 active</td></tr>
+        <tr><td>Budget FY24</td><td style="color:var(--blue-bright)">₹820 Cr</td></tr>
+        <tr><td>Corruption</td><td style="color:var(--red);font-weight:700;font-family:var(--fd)">71 / 100</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── TAX PANEL ── -->
+<div id="tax-panel" class="panel" style="display:none">
+
+  <div class="tax-header">
+    <div class="tax-title-group">
+      <h1>Follow My <span>Tax Money</span></h1>
+      <p id="tax-sub">NH-48 · Delhi–Jaipur · FY 2023-24 · Budget: ₹2,840 Crores</p>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-ghost-red" onclick="document.getElementById('score-modal').classList.add('open')">How score is calculated</button>
+      <button class="btn btn-ghost-blue" onclick="toggleRawData()">Raw data</button>
+    </div>
+  </div>
+
+  <!-- AI HERO INSIGHT CARD -->
+  <div class="ai-hero-card" id="ai-hero-card">
+    <div class="ai-hero-top">
+      <div class="ai-hero-badge">
+        <div class="ai-spark-icon">
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <span class="ai-hero-label">AI Insight Summary</span>
+      </div>
+      <span class="ai-refresh" id="ai-refresh-time">Updated just now</span>
+    </div>
+    <div class="ai-hero-text" id="ai-hero-text">
+      RoadWatch AI has detected <strong class="hl-red">critical anomalies</strong> on <strong>NH-48 (Delhi–Jaipur)</strong>. The same 20km stretch was resurfaced <span class="hl-red">7 times in 4 years</span>, costing taxpayers an estimated <span class="hl-red">₹940 crores</span> — engineers estimate 2 repairs would have sufficed. Budget escalation stands at <span class="hl-amber">+38% above sanctioned</span>, with <strong>8 of 11 CAG audit objections still unresolved</strong>. Tender transparency is poor: <span class="hl-amber">62% contracts were closed-bid</span>. Combined, these indicators yield a <span class="hl-red">Corruption Probability Score of 71/100 (Critical Risk)</span>.
+    </div>
+    <div class="ai-hero-pills">
+      <span class="ai-pill ai-pill-red">⚠ Critical Budget Overrun</span>
+      <span class="ai-pill ai-pill-amber">🔁 Repeat Repair Anomaly</span>
+      <span class="ai-pill ai-pill-blue">📋 8 Unresolved CAG Flags</span>
+    </div>
+  </div>
+
+  <div class="nh-pills">
+    <button class="nh-pill active" onclick="selectNH('NH-48',this)">NH-48<span class="sub">Delhi – Jaipur</span></button>
+    <button class="nh-pill" onclick="selectNH('NH-44',this)">NH-44<span class="sub">Delhi – Chandigarh</span></button>
+    <button class="nh-pill" onclick="selectNH('NH-58',this)">NH-58<span class="sub">Delhi – Haridwar</span></button>
+    <button class="nh-pill" onclick="selectNH('NH-9',this)">NH-9<span class="sub">Delhi – Lucknow</span></button>
+    <button class="nh-pill" onclick="selectNH('NH-19',this)">NH-19<span class="sub">Delhi – Agra</span></button>
+  </div>
+
+  <div class="qs-grid">
+    <div class="qs-card qs-card-blue">
+      <span class="qs-label" style="color:var(--blue-bright)">FY23-24 Budget</span>
+      <div class="qs-val blue" id="stat-budget">₹2,840 Cr</div>
+      <div class="qs-sub">Sanctioned allocation</div>
+      <div class="qs-icon" style="background:var(--blue-dim)"><svg width="16" height="16" fill="none" stroke="var(--blue-bright)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+    </div>
+    <div class="qs-card qs-card-amber">
+      <span class="qs-label" style="color:var(--amber)">Avg Cost Overrun</span>
+      <div class="qs-val amber" id="stat-overrun">+38%</div>
+      <div class="qs-sub">vs. sanctioned amount</div>
+      <div class="qs-icon" style="background:var(--amber-dim)"><svg width="16" height="16" fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+    </div>
+    <div class="qs-card qs-card-red">
+      <span class="qs-label" style="color:var(--red)">Same-Stretch Repairs</span>
+      <div class="qs-val red" id="stat-repairs">7×</div>
+      <div class="qs-sub">in 4 years — anomaly</div>
+      <div class="qs-icon" style="background:var(--red-dim)"><svg width="16" height="16" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+    </div>
+    <div class="qs-card qs-card-slate">
+      <span class="qs-label" style="color:var(--slate)">CAG Objections</span>
+      <div class="qs-val slate" id="stat-cag">8/11</div>
+      <div class="qs-sub">Pending resolution</div>
+      <div class="qs-icon" style="background:rgba(100,116,139,0.12)"><svg width="16" height="16" fill="none" stroke="var(--slate)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+    </div>
+  </div>
+
+  <div class="score-grid">
+    <div class="gauge-card">
+      <div class="gauge-title">Corruption Probability Score</div>
+      <canvas id="cgauge" width="190" height="190"></canvas>
+      <div class="score-display">
+        <div class="score-num" id="score-num">0</div>
+        <div class="score-denom">out of 100</div>
+        <div class="score-badge-wrap"><span class="badge badge-red" id="score-badge">Critical Risk</span></div>
+      </div>
+      <div class="score-src">6 weighted metrics · CAG · NHAI · RTI · PFMS · GeM</div>
+    </div>
+
+    <div class="metrics-card">
+      <div class="metrics-header">
+        <span class="metrics-header-title">Score Components</span>
+        <span style="font-family:var(--fm);font-size:10px;color:var(--t3)">Weight · Score</span>
+      </div>
+      <div class="metric-row-item">
+        <div class="metric-info"><div class="metric-name">Budget Overrun Rate</div><div class="metric-desc" id="md1">Actual vs. sanctioned — avg +38%</div></div>
+        <div class="metric-track"><div class="metric-fill" id="mb1" style="background:var(--red)"></div></div>
+        <div class="metric-score-lbl td-r" id="ms1">78</div><div class="metric-weight">×0.25</div>
+      </div>
+      <div class="metric-row-item">
+        <div class="metric-info"><div class="metric-name">Repair Frequency Anomaly</div><div class="metric-desc" id="md2">Same 20km repaired 7× in 4 years</div></div>
+        <div class="metric-track"><div class="metric-fill" id="mb2" style="background:var(--red)"></div></div>
+        <div class="metric-score-lbl td-r" id="ms2">85</div><div class="metric-weight">×0.20</div>
+      </div>
+      <div class="metric-row-item">
+        <div class="metric-info"><div class="metric-name">Tender Transparency</div><div class="metric-desc" id="md3">62% contracts via closed-bidding</div></div>
+        <div class="metric-track"><div class="metric-fill" id="mb3" style="background:var(--amber)"></div></div>
+        <div class="metric-score-lbl td-a" id="ms3">61</div><div class="metric-weight">×0.20</div>
+      </div>
+      <div class="metric-row-item">
+        <div class="metric-info"><div class="metric-name">Quality Compliance</div><div class="metric-desc" id="md4">34% material tests failed IRC standards</div></div>
+        <div class="metric-track"><div class="metric-fill" id="mb4" style="background:var(--amber)"></div></div>
+        <div class="metric-score-lbl td-a" id="ms4">70</div><div class="metric-weight">×0.15</div>
+      </div>
+      <div class="metric-row-item">
+        <div class="metric-info"><div class="metric-name">Audit Non-Compliance</div><div class="metric-desc" id="md5">8 of 11 CAG objections unresolved</div></div>
+        <div class="metric-track"><div class="metric-fill" id="mb5" style="background:var(--red)"></div></div>
+        <div class="metric-score-lbl td-r" id="ms5">82</div><div class="metric-weight">×0.10</div>
+      </div>
+      <div class="metric-row-item">
+        <div class="metric-info"><div class="metric-name">Contractor Blacklist Status</div><div class="metric-desc" id="md6">2 pending cases, no prior debarments</div></div>
+        <div class="metric-track"><div class="metric-fill" id="mb6" style="background:var(--green)"></div></div>
+        <div class="metric-score-lbl td-g" id="ms6">40</div><div class="metric-weight">×0.10</div>
+      </div>
+      <div class="formula-block">
+        <div style="color:var(--t2);font-size:11px;margin-bottom:5px;font-weight:600;font-family:var(--fd)">Weighted formula</div>
+        <span id="formula-text" style="color:var(--t3)">(78×0.25) + (85×0.20) + (61×0.20) + (70×0.15) + (82×0.10) + (40×0.10)</span><br>
+        = <span class="formula-result" id="formula-result">71.4 / 100</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="charts-3">
+    <div class="chart-card"><div class="chart-title">Budget vs. Actual Spend (₹ Cr)</div><canvas id="cht1" height="140"></canvas></div>
+    <div class="chart-card"><div class="chart-title">Repair Frequency — Key Stretch</div><canvas id="cht2" height="140"></canvas></div>
+    <div class="chart-card"><div class="chart-title">Expenditure Breakdown FY23-24</div><canvas id="cht3" height="140"></canvas></div>
+  </div>
+
+  <div class="charts-2">
+    <div class="chart-card"><div class="chart-title">Contractor Award Value — Top 5 (₹ Cr)</div><canvas id="cht4" height="130"></canvas></div>
+    <div class="chart-card"><div class="chart-title">Quality Test Failure Rate (%)</div><canvas id="cht5" height="130"></canvas></div>
+  </div>
+
+  <div class="bottom-grid">
+    <div class="fact-card">
+      <div class="fact-lbl">📊 Did you know <span style="font-size:9px;opacity:0.6;font-weight:400;letter-spacing:0">· updates every 7s</span></div>
+      <div class="fact-text active" id="fact-0">India loses an estimated <span class="fact-hl">₹3.5 lakh crores annually</span> to road infrastructure corruption — enough to build <span class="fact-hl">87,500 km of new highways</span> at standard IRC costs.</div>
+      <div class="fact-text" id="fact-1">The NH-48 stretch between Gurugram and Jaipur has been resurfaced <span class="fact-hl">7 times in 4 years</span>, costing taxpayers ₹940 crores. Engineers estimate 2 repairs would have sufficed.</div>
+      <div class="fact-text" id="fact-2">A 2022 CAG audit found <span class="fact-hl">68% of NHAI contracts awarded without competitive bidding</span> had costs 42% higher than open-tender contracts for the same scope.</div>
+      <div class="fact-text" id="fact-3">In Bihar, roads worth <span class="fact-hl">₹1,200 crores were declared "completed"</span> in government records — ISRO satellite imagery confirmed they were never built.</div>
+      <div class="fact-text" id="fact-4">NHAI's FY 2023-24 budget was <span class="fact-hl">₹1.62 lakh crores</span>. Analysts estimate 15–22% is lost to inflated billing, substandard materials, and kickbacks.</div>
+    </div>
+
+    <div class="timeline-card">
+      <div class="tl-title">Fund Flow Timeline · <span id="tl-nh">NH-48</span></div>
+      <div id="tl-body"></div>
+    </div>
+  </div>
+
+  <div class="raw-card">
+    <div class="raw-card-header">
+      <div class="raw-title-text" id="raw-title">Raw transaction data · NH-48 · FY2023-24</div>
+      <button class="raw-toggle-btn" id="raw-btn" onclick="toggleRawData()">Show</button>
+    </div>
+    <div id="raw-content" style="display:none;overflow-x:auto">
+      <table class="data-table"><thead><tr><th>TXN ID</th><th>Date</th><th>Description</th><th>Sanctioned ₹Cr</th><th>Actual ₹Cr</th><th>Overrun</th><th>Contractor</th><th>Status</th></tr></thead>
+      <tbody id="raw-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <div style="height:24px;flex-shrink:0"></div>
+</div>
+
+<!-- ── ALERTS PANEL ── -->
+<div id="alerts-panel" class="panel" style="display:none">
+  <div class="tax-header" style="flex-shrink:0">
+    <div class="tax-title-group">
+      <h1>Alert <span>History</span></h1>
+      <p>Real-time event log · Today's drive · NH-48</p>
+    </div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-card stat-card-bg"><div class="stat-num" style="color:var(--amber)">24</div><div class="stat-desc">Slow Car Warnings</div></div>
+    <div class="stat-card stat-card-bg"><div class="stat-num" style="color:var(--red)">8</div><div class="stat-desc">Rear Approach Alerts</div></div>
+    <div class="stat-card stat-card-bg"><div class="stat-num" style="color:var(--blue-bright)">3</div><div class="stat-desc">High Fog Events</div></div>
+    <div class="stat-card stat-card-bg"><div class="stat-num" style="color:var(--green)">156</div><div class="stat-desc">KM Safe Today</div></div>
+  </div>
+  <div class="raw-card" style="flex-shrink:0;overflow:hidden">
+    <div class="raw-card-header"><span class="raw-title-text">Event Log — Today</span></div>
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Time</th><th>Event</th><th>Severity</th><th>Speed</th><th>Location</th></tr></thead>
+        <tbody>
+          <tr><td>14:32:07</td><td>Slow vehicle detected ahead — 28 km/h</td><td class="td-a">Medium</td><td>82 km/h</td><td>NH-48 KM 234</td></tr>
+          <tr><td>14:18:45</td><td>Fast approaching vehicle from rear — 142 km/h</td><td class="td-r">High</td><td>80 km/h</td><td>NH-48 KM 229</td></tr>
+          <tr><td>13:55:12</td><td>High fog density — visibility 120m</td><td class="td-r">High</td><td>65 km/h</td><td>NH-48 KM 222</td></tr>
+          <tr><td>13:22:33</td><td>Slow vehicle ahead — 35 km/h</td><td class="td-a">Medium</td><td>78 km/h</td><td>NH-48 KM 218</td></tr>
+          <tr><td>12:48:11</td><td>Highway mode auto-enabled on NH entry</td><td class="td-g">Info</td><td>72 km/h</td><td>NH-48 Entry KM 198</td></tr>
+          <tr><td>12:05:44</td><td>Pothole detected via suspension sensor</td><td class="td-a">Medium</td><td>60 km/h</td><td>NH-48 KM 212</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<!-- ── COMPLAINTS PANEL ── -->
+<div id="complaints-panel" class="panel" style="display:none">
+
+  <!-- Header -->
+  <div class="tax-header" style="flex-shrink:0">
+    <div class="tax-title-group">
+      <h1>Complaint <span>Portal</span></h1>
+      <p>Smart routing to the correct authority · AI-assisted complaint filing · NH-48 context pre-loaded</p>
+    </div>
+    <div class="btn-group">
+      <div class="pill"><div class="dot-live" style="background:var(--amber);box-shadow:0 0 6px var(--amber)"></div>Avg Resolution: 47 days</div>
+      <div class="pill" style="color:var(--red)">⚠ 68% complaints ignored past 90 days</div>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="cstat-grid">
+    <div class="cstat-card c-blue">
+      <div class="cstat-num" style="color:var(--blue-bright)" id="cs1">0</div>
+      <div class="cstat-lbl">Complaints Filed (NH-48)</div>
+      <div class="cstat-trend" style="color:var(--amber)">↑ 23% this month</div>
+    </div>
+    <div class="cstat-card c-red">
+      <div class="cstat-num" style="color:var(--red)" id="cs2">0</div>
+      <div class="cstat-lbl">Awaiting Response</div>
+      <div class="cstat-trend" style="color:var(--red)">↑ 12% overdue</div>
+    </div>
+    <div class="cstat-card c-green">
+      <div class="cstat-num" style="color:var(--green)" id="cs3">0</div>
+      <div class="cstat-lbl">Resolved This Year</div>
+      <div class="cstat-trend" style="color:var(--green)">32% resolution rate</div>
+    </div>
+    <div class="cstat-card c-amber">
+      <div class="cstat-num" style="color:var(--amber)" id="cs4">0</div>
+      <div class="cstat-lbl">Days Avg Response Time</div>
+      <div class="cstat-trend" style="color:var(--red)">Legal limit: 30 days</div>
+    </div>
+  </div>
+
+  <!-- AI Smart Router Hero -->
+  <div class="router-hero cp-full">
+    <div class="router-title">AI <span>Smart Router</span></div>
+    <div class="router-sub">Tell us your issue — we instantly identify the responsible authority and file a pre-addressed complaint</div>
+    <div class="router-steps">
+      <div class="router-step">
+        <div class="router-step-num">1</div>
+        <div class="router-step-text">Select road type &amp; issue category</div>
+      </div>
+      <div class="router-step">
+        <div class="router-step-num">2</div>
+        <div class="router-step-text">AI identifies responsible authority</div>
+      </div>
+      <div class="router-step">
+        <div class="router-step-num">3</div>
+        <div class="router-step-text">Pre-filled complaint with legal references</div>
+      </div>
+      <div class="router-step">
+        <div class="router-step-num">4</div>
+        <div class="router-step-text">Auto-escalation if no response in 30 days</div>
+      </div>
+    </div>
+    <div class="router-form">
+      <div class="rf-group">
+        <label class="rf-label">Road Type</label>
+        <select class="rf-select" id="rf-road-type" onchange="updateRouterResult()">
+          <option value="">Select road type</option>
+          <option value="NH" selected>National Highway (NH)</option>
+          <option value="SH">State Highway (SH)</option>
+          <option value="MDR">Major District Road (MDR)</option>
+          <option value="rural">Rural / Gram Sadak</option>
+        </select>
+      </div>
+      <div class="rf-group">
+        <label class="rf-label">Issue Category</label>
+        <select class="rf-select" id="rf-issue" onchange="updateRouterResult()">
+          <option value="">Select issue</option>
+          <option value="pothole">Potholes / Road Damage</option>
+          <option value="corruption">Corruption / Budget Misuse</option>
+          <option value="incomplete">Incomplete / Abandoned Work</option>
+          <option value="quality">Poor Construction Quality</option>
+          <option value="safety">Missing Safety Barriers / Signs</option>
+          <option value="toll">Toll Irregularity</option>
+          <option value="tender">Tender / Procurement Fraud</option>
+          <option value="contractor">Contractor Non-Performance</option>
+        </select>
+      </div>
+      <div class="rf-group">
+        <label class="rf-label">State / Location</label>
+        <select class="rf-select" id="rf-state" onchange="updateRouterResult()">
+          <option value="RJ">Rajasthan</option>
+          <option value="DL">Delhi / NCR</option>
+          <option value="UP">Uttar Pradesh</option>
+          <option value="HR">Haryana</option>
+          <option value="MH">Maharashtra</option>
+          <option value="KA">Karnataka</option>
+          <option value="TN">Tamil Nadu</option>
+        </select>
+      </div>
+      <button class="route-btn" onclick="routeComplaint()">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Route Now
+      </button>
+    </div>
+    <!-- Result card -->
+    <div class="authority-result" id="authority-result">
+      <div class="ar-top">
+        <div class="ar-badge"><div class="ar-dot"></div><div class="ar-label">Authority Identified</div></div>
+        <span style="font-family:var(--fm);font-size:10px;color:var(--t3)">Response deadline: 30 days (RTI Act)</span>
+      </div>
+      <div class="ar-grid" id="ar-grid"><!-- populated by JS --></div>
+      <div class="ar-actions">
+        <button class="ar-action-btn btn-file" onclick="showToast('Complaint draft copied to clipboard with pre-filled legal references.')">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Copy Complaint Draft
+        </button>
+        <button class="ar-action-btn btn-escalate" onclick="showToast('Escalation path: EE → SE → CE → MoRTH Secretary → CVC')">
+          <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          View Escalation Path
+        </button>
+        <button class="ar-action-btn btn-rti" onclick="showToast('RTI application template copied. File at: https://rtionline.gov.in')">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          File RTI Instead
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Complaint Form + Process -->
+  <div class="cp-grid">
+    <!-- File Complaint Form -->
+    <div class="cp-card">
+      <div class="cp-section-title">File a Complaint</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" class="form-input" placeholder="Full name" id="cf-name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mobile / Email</label>
+          <input type="text" class="form-input" placeholder="Contact for updates" id="cf-contact">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Road Number</label>
+          <input type="text" class="form-input" value="NH-48" id="cf-road">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kilometre Mark</label>
+          <input type="text" class="form-input" placeholder="e.g. KM 234" id="cf-km">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Issue Category</label>
+          <select class="form-select" id="cf-category">
+            <option>Pothole / Road Damage</option>
+            <option>Corruption / Budget Misuse</option>
+            <option>Poor Construction Quality</option>
+            <option>Incomplete Work</option>
+            <option>Missing Safety Barriers</option>
+            <option>Toll Irregularity</option>
+          </select>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Complaint Description</label>
+          <textarea class="form-textarea" placeholder="Describe the issue clearly — include dates, observations, photos if any..." id="cf-desc" oninput="updateCharCount(this)"></textarea>
+          <div class="char-count" id="char-count">0 / 500 characters</div>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Urgency Level</label>
+          <select class="form-select" id="cf-urgency">
+            <option value="high">🔴 High — Safety risk / ongoing damage</option>
+            <option value="medium">🟡 Medium — Significant inconvenience</option>
+            <option value="low">🟢 Low — Minor issue</option>
+          </select>
+        </div>
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="submitComplaint()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Submit to Responsible Authority
+      </button>
+    </div>
+
+    <!-- Complaint Process + Escalation -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="cp-card" style="flex-shrink:0">
+        <div class="cp-section-title">Complaint Process</div>
+        <div class="process-flow">
+          <div class="pf-step">
+            <div class="pf-icon done">✅</div>
+            <div class="pf-label"><strong>File</strong>iRASTe / CPGRAMS</div>
+          </div>
+          <div class="pf-step">
+            <div class="pf-icon active">⏳</div>
+            <div class="pf-label"><strong>Acknowledge</strong>7 days</div>
+          </div>
+          <div class="pf-step">
+            <div class="pf-icon pending">🔍</div>
+            <div class="pf-label"><strong>Investigation</strong>15–30 days</div>
+          </div>
+          <div class="pf-step">
+            <div class="pf-icon pending">📋</div>
+            <div class="pf-label"><strong>Action Report</strong>Within 30 days</div>
+          </div>
+          <div class="pf-step">
+            <div class="pf-icon pending">✔</div>
+            <div class="pf-label"><strong>Closure</strong>Or escalate</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:12px 14px;background:rgba(255,77,77,0.06);border:1px solid rgba(255,77,77,0.18);border-radius:var(--r-sm)">
+          <div style="font-family:var(--fd);font-size:11px;font-weight:700;color:var(--red);margin-bottom:6px">⚠ Know Your Rights</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.8">Under the RTI Act 2005, any public authority must respond within <strong style="color:var(--t1)">30 days</strong>. Non-response is a punishable offence. Escalate to <strong style="color:var(--t1)">CIC</strong> if no reply received.</div>
+        </div>
+      </div>
+
+      <div class="cp-card">
+        <div class="cp-section-title">Track a Complaint</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input type="text" class="form-input" placeholder="Enter complaint ID (e.g. CPGRAMS-2024-NH48-1821)" id="track-id" style="flex:1">
+          <button class="route-btn" style="padding:10px 18px" onclick="trackComplaint()">Track</button>
+        </div>
+        <div id="track-result" style="display:none;padding:14px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;line-height:1.9;color:var(--t2)"></div>
+        <div style="margin-top:12px;padding:10px 14px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="font-family:var(--fm);font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Portal Direct Links</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="color:var(--t2)">CPGRAMS (Central)</span>
+              <button class="copy-btn" onclick="showToast('Link: pgportal.gov.in')"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="color:var(--t2)">iRASTe (NHAI)</span>
+              <button class="copy-btn" onclick="showToast('Link: iRASTE.nhai.gov.in')"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="color:var(--t2)">RTI Online (MoRTH)</span>
+              <button class="copy-btn" onclick="showToast('Link: rtionline.gov.in')"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="color:var(--t2)">CVC (Corruption)</span>
+              <button class="copy-btn" onclick="showToast('Link: cvc.gov.in/complaint')"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Open</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authority Directory -->
+  <div class="cp-card cp-full">
+    <div class="cp-section-title">Responsible Authority Directory</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="copy-btn" style="padding:7px 14px;font-size:11px" onclick="filterAuthority('all')" id="af-all">All</button>
+      <button class="copy-btn" style="padding:7px 14px;font-size:11px" onclick="filterAuthority('national')" id="af-national">National</button>
+      <button class="copy-btn" style="padding:7px 14px;font-size:11px" onclick="filterAuthority('state')" id="af-state">State</button>
+      <button class="copy-btn" style="padding:7px 14px;font-size:11px" onclick="filterAuthority('vigilance')" id="af-vigilance">Vigilance</button>
+    </div>
+    <div style="overflow-x:auto;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border)">
+      <table class="authority-table" id="authority-dir">
+        <thead>
+          <tr>
+            <th>Authority / Officer</th>
+            <th>Jurisdiction</th>
+            <th>Level</th>
+            <th>Road Type</th>
+            <th>Issue Type</th>
+            <th>Contact / Portal</th>
+          </tr>
+        </thead>
+        <tbody id="authority-tbody"><!-- populated by JS --></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Insight + Tips -->
+  <div class="cp-grid">
+    <div class="cp-card">
+      <div class="cp-section-title">Filing Tips from RoadWatch AI</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="font-size:16px;flex-shrink:0">📍</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6"><strong style="color:var(--t1);display:block;margin-bottom:2px">Always include the KM marker</strong>Exact location enables faster routing. e.g. "NH-48, KM 234.5 near Kotputli junction"</div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="font-size:16px;flex-shrink:0">📸</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6"><strong style="color:var(--t1);display:block;margin-bottom:2px">Attach geotagged photos</strong>Photos with GPS metadata are inadmissible for rejection. Take in bright light, show scale with objects.</div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="font-size:16px;flex-shrink:0">⚖️</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6"><strong style="color:var(--t1);display:block;margin-bottom:2px">Quote the legal clause</strong>Reference "Motor Vehicles Act 1988 S.138" for road defects or "NHAI Act 1988 S.16" for highway quality.</div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="font-size:16px;flex-shrink:0">🔁</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6"><strong style="color:var(--t1);display:block;margin-bottom:2px">File to three bodies simultaneously</strong>CPGRAMS + state PWD + local MLA email. Parallel filing triples the resolution probability.</div>
+        </div>
+        <div style="display:flex;gap:10px;padding:10px 12px;background:rgba(255,77,77,0.06);border:1px solid rgba(255,77,77,0.18);border-radius:var(--r-sm)">
+          <div style="font-size:16px;flex-shrink:0">🚨</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.6"><strong style="color:var(--red);display:block;margin-bottom:2px">Corruption complaints — go direct to CVC</strong>Central Vigilance Commission handles contractor fraud and budget misuse. File at cvc.gov.in — anonymous complaints accepted.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cp-card">
+      <div class="cp-section-title">NH-48 Complaint History</div>
+      <canvas id="complaint-chart" height="180"></canvas>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="padding:10px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm);text-align:center">
+          <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--red)">68%</div>
+          <div style="font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:3px;letter-spacing:1px;text-transform:uppercase">Unanswered 90d+</div>
+        </div>
+        <div style="padding:10px 12px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--r-sm);text-align:center">
+          <div style="font-family:var(--fd);font-size:22px;font-weight:800;color:var(--green)">32%</div>
+          <div style="font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:3px;letter-spacing:1px;text-transform:uppercase">Resolution Rate</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:24px;flex-shrink:0"></div>
+</div>
+
+</div><!-- /main -->
+
+<!-- MODAL -->
+<div class="modal-ov" id="score-modal">
+  <div class="modal-box">
+    <h2>How is the Score calculated?</h2>
+    <p>The <strong style="color:var(--blue-bright)">Corruption Probability Score (CPS)</strong> is a weighted algorithmic score derived entirely from publicly available government data. It flags systemic anomalies — not individuals.</p>
+    <p class="section-heading">Data Sources</p>
+    <ul>
+      <li>NHAI/PWD Financial Records (RTI disclosures)</li>
+      <li>CAG Audit Reports — Ministry of Road Transport</li>
+      <li>ISRO Bhuvan — GIS Satellite Road Imagery</li>
+      <li>GeM Portal Tender Data (Open Government Data)</li>
+      <li>PFMS — Public Financial Management System</li>
+      <li>State PWD Contractor Registry and Blacklist</li>
+    </ul>
+    <p class="section-heading">Scoring Thresholds</p>
+    <ul>
+      <li><strong>Budget Overrun (25%)</strong>: Above 15% overrun → 50+; above 30% → 75+</li>
+      <li><strong>Repair Frequency (20%)</strong>: 3+ repairs on same stretch in 2 years → 80+</li>
+      <li><strong>Tender Transparency (20%)</strong>: Open bids → 0; direct awards → 100</li>
+      <li><strong>Quality Compliance (15%)</strong>: IRC material test failure rate</li>
+      <li><strong>Audit Compliance (10%)</strong>: Unresolved CAG objections ratio</li>
+      <li><strong>Contractor Status (10%)</strong>: Pending cases, debarment history</li>
+    </ul>
+    <p style="margin-top:14px;font-size:11px;color:var(--t3)">For civic transparency only. All data is publicly accessible.</p>
+    <button class="modal-close" onclick="document.getElementById('score-modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<!-- CHATBOT -->
+<div id="chatbot">
+  <div class="chat-sidebar">
+    <div class="chat-sidebar-top">
+      <div class="chat-avatar">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="chat-agent-name">RoadWatch AI</div>
+        <div class="chat-agent-sub">Powered by Claude</div>
+      </div>
+    </div>
+    <div class="chat-topics">
+      <div class="chat-topics-lbl">Suggested</div>
+      <button class="topic-pill" onclick="useChip(this)">Why is the corruption score so high?</button>
+      <button class="topic-pill" onclick="useChip(this)">Tips for driving in heavy fog</button>
+      <button class="topic-pill" onclick="useChip(this)">How do I file a road quality complaint?</button>
+      <button class="topic-pill" onclick="useChip(this)">Explain the PMGSY scheme</button>
+      <button class="topic-pill" onclick="useChip(this)">What does NHAI do?</button>
+      <button class="topic-pill" onclick="useChip(this)">How are road tenders awarded in India?</button>
+      <button class="topic-pill" onclick="useChip(this)">What is a CAG audit objection?</button>
+    </div>
+    <div class="chat-footer">RoadWatch AI uses public government data. Not legal or financial advice.</div>
+  </div>
+  <div class="chat-main">
+    <div class="chat-topbar">
+      <div class="chat-topbar-left">
+        <div class="chat-topbar-title">Road Intelligence Assistant</div>
+        <div class="chat-status"><div class="dot-live"></div>Online</div>
+      </div>
+      <button class="chat-close-btn" onclick="toggleChat()">✕</button>
+    </div>
+    <div class="chat-messages" id="chat-msgs">
+      <div class="msg">
+        <div class="msg-av"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <div>
+          <div class="msg-bubble">Namaste. I'm <strong>RoadWatch AI</strong>, your India road intelligence assistant.<br><br>I can help with corruption data, highway safety, fog conditions, road schemes like PMGSY and NHAI, and how to file complaints via iRASTe or CPGRAMS.<br><br>What would you like to know?</div>
+          <div class="msg-time">Just now</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <div class="wave" id="wave-viz"><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div></div>
+        <input type="text" id="cbinput" placeholder="Ask about road safety, tax money, corruption data..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="chat-send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ═══════════════════════════════════
+   DATA
+═══════════════════════════════════ */
+const NH_DATA={
+  'NH-48':{name:'Delhi–Jaipur',budget:2840,overrun:'+38%',repairs:'7×',cagPending:'8/11',score:71.4,badge:'Critical Risk',badgeClass:'badge-red',
+    scores:[78,85,61,70,82,40],descs:['Actual vs. sanctioned — avg +38%','Same 20km stretch repaired 7× in 4 years','62% contracts via closed-bidding','34% material tests failed IRC standards','8 of 11 CAG objections unresolved','2 pending cases, no prior debarments'],
+    aiInsight:'RoadWatch AI has detected <strong class="hl-red">critical anomalies</strong> on <strong>NH-48 (Delhi–Jaipur)</strong>. The same 20km stretch was resurfaced <span class="hl-red">7 times in 4 years</span>, costing ₹940 crores in likely unnecessary spending. Budget escalation stands at <span class="hl-amber">+38%</span>, with <strong>8 of 11 CAG audit objections unresolved</strong> and 62% closed-bid contracts. Corruption Probability Score: <span class="hl-red">71/100 — Critical Risk</span>.',
+    aiPills:['⚠ Critical Budget Overrun','🔁 Repeat Repair Anomaly','📋 8 Unresolved CAG Flags'],
+    aiPillClasses:['ai-pill-red','ai-pill-amber','ai-pill-blue'],
+    budgetData:[380,415,445,525,585],actualData:[472,556,614,740,820],repairData:[1,2,1,3,2,3,2],
+    donut:[27,21,17,13,12,10],contractors:[520,340,280,210,180],contractorNames:['BRC Ltd','Infra Works','NovaBuild','L&T Infra','SafeRoads'],qFail:[18,22,28,31,34,38,30],
+    timeline:[{d:'g',date:'Apr 2019',event:'Sanctioned by MoRTH',amount:'₹2,840 Cr',c:'var(--blue-bright)'},{d:'a',date:'Jun 2021',event:'Cost revision #1 — no re-tender',amount:'+₹380 Cr',c:'var(--amber)'},{d:'r',date:'Mar 2022',event:'CAG flags ₹520 Cr with no bills',amount:'₹520 Cr',c:'var(--red)'},{d:'a',date:'Nov 2022',event:'2nd revision, penalty waived',amount:'+₹440 Cr',c:'var(--amber)'},{d:'r',date:'FY23-24',event:'45%+ overrun — project incomplete',amount:'₹4,240 Cr total',c:'var(--red)'}],
+    txns:[['TXN-2024-00187','2024-01-12','Resurfacing Km 220–240','48.00','67.20','+40%','M/s BRC Ltd','Under Review'],['TXN-2024-00142','2023-11-28','Bridge Repair Km 234','120.00','158.40','+32%','M/s Infra Works','CAG Flagged'],['TXN-2023-00891','2023-08-15','Pothole Patching Km 210–250','8.50','12.10','+42%','M/s LocalPatch','Completed'],['TXN-2023-00622','2023-04-18','Median Construction Km 200–260','95.00','138.70','+46%','M/s BRC Ltd','Disputed'],['TXN-2022-01204','2022-12-01','Full Resurfacing Km 220–240','52.00','71.30','+37%','M/s BRC Ltd','Audit Pending']]},
+  'NH-44':{name:'Delhi–Chandigarh',budget:1840,overrun:'+29%',repairs:'4×',cagPending:'5/9',score:58.2,badge:'High Risk',badgeClass:'badge-amber',
+    scores:[62,55,70,58,60,38],descs:['Actual vs. sanctioned — avg +29%','Same 15km repaired 4× in 3 years','70% contracts via closed-bidding','28% material tests failed','5 of 9 CAG objections unresolved','1 pending case'],
+    aiInsight:'<strong>NH-44 (Delhi–Chandigarh)</strong> shows <span class="hl-amber">moderate-to-high risk patterns</span>. Budget overrun of <span class="hl-amber">+29%</span> is significant, and 5 of 9 CAG objections remain unresolved. Tender transparency is especially poor at <span class="hl-amber">70% closed-bid contracts</span>. Corruption Probability Score: <span class="hl-amber">58.2/100 — High Risk</span>. Closer audit of contractor awards recommended.',
+    aiPills:['↗ +29% Budget Overrun','🔒 70% Closed Bids','⚖ 5 CAG Flags Pending'],
+    aiPillClasses:['ai-pill-amber','ai-pill-amber','ai-pill-blue'],
+    budgetData:[310,340,370,420,480],actualData:[372,412,462,540,620],repairData:[0,1,2,1,2,2,1],
+    donut:[30,22,16,12,11,9],contractors:[440,310,260,190,160],contractorNames:['L&T Infra','PNC Infratech','Dilip Buildcon','GR Infra','APCO'],qFail:[14,19,22,25,28,32,27],
+    timeline:[{d:'g',date:'Jan 2020',event:'Project sanctioned',amount:'₹1,840 Cr',c:'var(--blue-bright)'},{d:'a',date:'Sep 2021',event:'Cost revision #1',amount:'+₹240 Cr',c:'var(--amber)'},{d:'r',date:'Jul 2022',event:'CAG flags ₹310 Cr',amount:'₹310 Cr',c:'var(--red)'},{d:'a',date:'FY23-24',event:'Completed — overrun unresolved',amount:'+29% final',c:'var(--amber)'}],
+    txns:[['TXN-2024-00221','2024-02-10','Resurfacing Km 80–100','52.00','67.60','+30%','M/s L&T Infra','Under Review'],['TXN-2024-00198','2023-12-15','Flyover Repairs Km 142','85.00','108.50','+28%','M/s PNC Infratech','CAG Flagged'],['TXN-2023-00831','2023-09-20','Pothole Patching','6.50','8.40','+29%','M/s LocalPatch','Completed']]},
+  'NH-58':{name:'Delhi–Haridwar',budget:920,overrun:'+44%',repairs:'9×',cagPending:'10/13',score:79.1,badge:'Critical Risk',badgeClass:'badge-red',
+    scores:[88,92,65,74,88,48],descs:['Actual vs. sanctioned — avg +44%','Same 12km repaired 9× in 5 years','65% contracts via closed-bidding','38% material tests failed','10 of 13 CAG objections unresolved','3 pending, 1 debarment'],
+    aiInsight:'<strong>NH-58 (Delhi–Haridwar)</strong> is the <span class="hl-red">highest-risk corridor in this dataset</span>. An extraordinary <span class="hl-red">9 repairs on the same 12km stretch</span> in 5 years signals systematic billing fraud. Budget overrun of <span class="hl-red">+44%</span>, one contractor blacklisted mid-project, and 10 of 13 CAG objections unresolved. Score: <span class="hl-red">79.1/100 — Critical Risk. Immediate investigation warranted.</span>',
+    aiPills:['🚨 Highest Risk Corridor','9× Same-Stretch Repair','⛔ 1 Contractor Blacklisted'],
+    aiPillClasses:['ai-pill-red','ai-pill-red','ai-pill-amber'],
+    budgetData:[180,195,210,240,260],actualData:[252,284,312,362,374],repairData:[2,3,2,4,3,4,3],
+    donut:[24,20,18,14,13,11],contractors:[310,240,200,160,140],contractorNames:['BRC Ltd','Infra Works','APCO','GR Infra','LocalBuild'],qFail:[24,28,32,36,38,42,36],
+    timeline:[{d:'g',date:'Mar 2019',event:'Sanctioned',amount:'₹920 Cr',c:'var(--blue-bright)'},{d:'r',date:'Aug 2020',event:'Contractor blacklisted mid-project',amount:'Contract voided',c:'var(--red)'},{d:'a',date:'Feb 2022',event:'3 revisions in 2 years',amount:'+₹412 Cr',c:'var(--amber)'},{d:'r',date:'FY23-24',event:'Highest risk corridor — 79/100',amount:'+44% overrun',c:'var(--red)'}],
+    txns:[['TXN-2024-00312','2024-01-28','Resurfacing Km 40–55','38.00','56.20','+48%','M/s BRC Ltd','Disputed'],['TXN-2024-00284','2023-11-10','Bridge Maintenance Km 88','72.00','104.40','+45%','M/s Infra Works','CAG Flagged']]},
+  'NH-9':{name:'Delhi–Lucknow',budget:2100,overrun:'+33%',repairs:'5×',cagPending:'9/14',score:65.8,badge:'High Risk',badgeClass:'badge-amber',
+    scores:[70,62,68,65,78,42],descs:['Actual vs. sanctioned — avg +33%','Same 22km repaired 5× in 4 years','68% contracts via closed-bidding','30% material tests failed','9 of 14 CAG objections unresolved','2 pending cases'],
+    aiInsight:'<strong>NH-9 (Delhi–Lucknow)</strong> shows <span class="hl-amber">persistent systemic irregularities</span>. At <span class="hl-amber">+33% budget overrun</span> and 9 of 14 CAG objections unresolved, the audit trail is weak. A 22km stretch has been repaired <span class="hl-amber">5× in 4 years</span>. Score: <span class="hl-amber">65.8/100 — High Risk</span>. Citizens along this corridor are advised to file RTI requests.',
+    aiPills:['↗ +33% Budget Overrun','🔁 5× Repeat Repairs','📋 9 CAG Flags Pending'],
+    aiPillClasses:['ai-pill-amber','ai-pill-amber','ai-pill-blue'],
+    budgetData:[340,360,390,460,520],actualData:[420,472,528,618,692],repairData:[1,1,2,2,3,2,2],
+    donut:[28,22,17,12,11,10],contractors:[480,380,300,240,180],contractorNames:['PNC Infratech','Dilip Buildcon','GR Infra','L&T Infra','BRC Ltd'],qFail:[16,21,24,28,30,34,28],
+    timeline:[{d:'g',date:'Jun 2020',event:'Sanctioned',amount:'₹2,100 Cr',c:'var(--blue-bright)'},{d:'a',date:'Jan 2022',event:'Cost revision',amount:'+₹320 Cr',c:'var(--amber)'},{d:'r',date:'Nov 2023',event:'9 CAG objections unresolved',amount:'₹480 Cr disputed',c:'var(--red)'}],
+    txns:[['TXN-2024-00418','2024-02-22','Expressway Widening','140.00','186.20','+33%','M/s PNC Infratech','Under Review'],['TXN-2024-00392','2023-12-08','Overpass Repair','95.00','121.40','+28%','M/s Dilip Buildcon','CAG Flagged']]},
+  'NH-19':{name:'Delhi–Agra',budget:3200,overrun:'+22%',repairs:'3×',cagPending:'4/12',score:41.3,badge:'Moderate Risk',badgeClass:'badge-blue',
+    scores:[48,42,40,45,52,30],descs:['Actual vs. sanctioned — avg +22%','Same 18km repaired 3× in 4 years','40% contracts via closed-bidding','22% material tests failed','4 of 12 CAG objections unresolved','No pending cases'],
+    aiInsight:'<strong>NH-19 (Delhi–Agra)</strong> is the <span class="hl-green">best-performing corridor</span> in this analysis. Phase 1 was completed on time, overrun is a relatively contained <span class="hl-blue">+22%</span>, and only 4 of 12 CAG objections remain open. Open-bid contracts account for 60% of awards — above average. Score: <span class="hl-blue">41.3/100 — Moderate Risk</span>. A benchmark for other corridors.',
+    aiPills:['✓ Best-in-class Score','✓ 60% Open Bids','↗ +22% Overrun — Lowest'],
+    aiPillClasses:['ai-pill-blue','ai-pill-blue','ai-pill-amber'],
+    budgetData:[520,540,580,650,720],actualData:[590,628,672,762,878],repairData:[0,1,1,1,2,1,1],
+    donut:[32,22,16,11,11,8],contractors:[680,540,420,310,260],contractorNames:['L&T Infra','GR Infra','Dilip Buildcon','PNC Infratech','IRB Infra'],qFail:[10,14,18,20,22,24,20],
+    timeline:[{d:'g',date:'Oct 2020',event:'Sanctioned',amount:'₹3,200 Cr',c:'var(--blue-bright)'},{d:'g',date:'Mar 2022',event:'Phase 1 completed on time',amount:'₹1,540 Cr',c:'var(--green)'},{d:'a',date:'Nov 2023',event:'Minor revision for toll plaza',amount:'+₹104 Cr',c:'var(--amber)'},{d:'g',date:'FY23-24',event:'Best-in-class — 41/100 score',amount:'Moderate Risk',c:'var(--green)'}],
+    txns:[['TXN-2024-00512','2024-03-10','Expressway Expansion','280.00','326.40','+17%','M/s L&T Infra','Completed'],['TXN-2024-00488','2023-12-20','Toll Plaza Upgrade','48.00','56.20','+17%','M/s GR Infra','Completed']]}
+};
+
+/* ═══════════════════════════════════
+   TAB SWITCHING
+═══════════════════════════════════ */
+let activeNH='NH-48',chartsReady=false;
+let cht1I,cht2I,cht3I,cht4I,cht5I;
+
+function switchTab(name,btn){
+  ['drive','tax','alerts'].forEach(t=>{
+    const p=document.getElementById(t+'-panel');
+    if(p){p.classList.remove('active');p.style.display='none';}
+  });
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const target=document.getElementById(name+'-panel');
+  if(target){target.style.display='flex';requestAnimationFrame(()=>target.classList.add('active'));}
+  if(btn)btn.classList.add('active');
+  isRendering=(name==='drive');
+  if(name==='drive'&&!renderAnimId)renderLoop();
+  if(name==='tax')setTimeout(()=>loadNHData(activeNH),180);
+}
+
+function selectNH(nh,btn){
+  document.querySelectorAll('.nh-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');activeNH=nh;loadNHData(nh);
+}
+
+function loadNHData(nh){
+  const d=NH_DATA[nh];
+  document.getElementById('tax-sub').textContent=`${nh} · ${d.name} · FY 2023-24 · Budget: ₹${d.budget} Crores`;
+  document.getElementById('raw-title').textContent=`Raw transaction data · ${nh} · FY2023-24`;
+  document.getElementById('stat-budget').textContent=`₹${d.budget} Cr`;
+  document.getElementById('stat-overrun').textContent=d.overrun;
+  document.getElementById('stat-repairs').textContent=d.repairs;
+  document.getElementById('stat-cag').textContent=d.cagPending;
+
+  // Update AI hero card
+  const hero=document.getElementById('ai-hero-card');
+  if(hero){
+    document.getElementById('ai-hero-text').innerHTML=d.aiInsight;
+    document.getElementById('ai-refresh-time').textContent='Updated just now';
+    const pillsContainer=hero.querySelector('.ai-hero-pills');
+    pillsContainer.innerHTML='';
+    d.aiPills.forEach((pill,i)=>{
+      const span=document.createElement('span');
+      span.className='ai-pill '+d.aiPillClasses[i];
+      span.textContent=pill;
+      pillsContainer.appendChild(span);
+    });
+    hero.style.animation='none';
+    requestAnimationFrame(()=>{hero.style.animation='';});
+  }
+
+  ['mb1','mb2','mb3','mb4','mb5','mb6'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.width='0%';
+  });
+  d.scores.forEach((v,i)=>{
+    setTimeout(()=>{
+      const bar=document.getElementById('mb'+(i+1));
+      const score=document.getElementById('ms'+(i+1));
+      const desc=document.getElementById('md'+(i+1));
+      const col=v>=75?'var(--red)':v>=55?'var(--amber)':'var(--green)';
+      const cls=v>=75?'td-r':v>=55?'td-a':'td-g';
+      if(bar){bar.style.background=col;bar.style.width=v+'%';bar.style.boxShadow='0 0 6px '+col;}
+      if(score){score.textContent=v;score.className='metric-score-lbl '+cls;}
+      if(desc)desc.textContent=d.descs[i];
+    },i*100);
+  });
+  const total=d.scores[0]*.25+d.scores[1]*.20+d.scores[2]*.20+d.scores[3]*.15+d.scores[4]*.10+d.scores[5]*.10;
+  document.getElementById('formula-result').textContent=total.toFixed(1)+' / 100';
+  const badge=document.getElementById('score-badge');badge.textContent=d.badge;badge.className='badge '+d.badgeClass;
+  const sc=document.getElementById('score-num');sc.style.color=d.score>=70?'var(--red)':d.score>=50?'var(--amber)':'var(--blue-bright)';
+  gaugeRunning=false;gaugeVal=0;animateGauge(d.score);
+  updateCharts(d);populateRawTable(d);populateTimeline(d,nh);
+}
+
+function showHotspot(type){
+  const msgs={
+    pothole:'Pothole cluster detected at KM 232. Road quality index: 34% material failures. Contractor: BRC Ltd. Last repair: Mar 2024.',
+    fog:'Fog zone active — visibility 340m. Recommended speed: 65 km/h. Fog lights required.',
+    repair:'Repair anomaly: This 20km stretch has been resurfaced 7× in 4 years — estimated ₹940 Cr potential misuse. CAG flagged.'
+  };
+  addAiMsg(msgs[type]||'');
+  toggleChat();
+}
+
+function populateTimeline(d,nh){
+  document.getElementById('tl-nh').textContent=nh;
+  const body=document.getElementById('tl-body');body.innerHTML='';
+  d.timeline.forEach(item=>{
+    const row=document.createElement('div');row.className='tl-item';
+    row.innerHTML=`<div class="tl-dot ${item.d}"></div><div class="tl-body"><div class="tl-date">${item.date}</div><div class="tl-event">${item.event}</div></div><div class="tl-amount" style="color:${item.c};font-family:var(--fd)">${item.amount}</div>`;
+    body.appendChild(row);
+  });
+}
+
+function populateRawTable(d){
+  const tbody=document.getElementById('raw-tbody');tbody.innerHTML='';
+  d.txns.forEach(r=>{
+    const tr=document.createElement('tr');
+    const oc=r[5].startsWith('+')?'td-r':'td-g';
+    const sc=r[7]==='Completed'?'td-g':r[7].includes('Pending')||r[7].includes('Review')?'td-a':'td-r';
+    tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td class="${oc}">${r[5]}</td><td>${r[6]}</td><td class="${sc}">${r[7]}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateCharts(d){
+  if(!chartsReady){initCharts(d);return;}
+  cht1I.data.datasets[0].data=d.budgetData;cht1I.data.datasets[1].data=d.actualData;cht1I.update();
+  cht2I.data.datasets[0].data=d.repairData;cht2I.update();
+  cht3I.data.datasets[0].data=d.donut;cht3I.update();
+  cht4I.data.labels=d.contractorNames;cht4I.data.datasets[0].data=d.contractors;cht4I.update();
+  cht5I.data.datasets[0].data=d.qFail;cht5I.update();
+}
+
+function initCharts(d){
+  chartsReady=true;
+  Chart.defaults.color='#3d4f73';
+  Chart.defaults.borderColor='rgba(255,255,255,0.04)';
+  Chart.defaults.font.family="'DM Sans',system-ui,sans-serif";
+  const base={responsive:true,animation:{duration:900,easing:'easeOutQuart'},
+    plugins:{legend:{labels:{font:{size:10},boxWidth:8,padding:8}}},
+    scales:{x:{ticks:{font:{size:10},color:'#3d4f73'},grid:{color:'rgba(255,255,255,0.03)'}},y:{ticks:{font:{size:10},color:'#3d4f73'},grid:{color:'rgba(255,255,255,0.03)'}}}};
+  cht1I=new Chart(document.getElementById('cht1'),{type:'bar',data:{labels:['FY19','FY20','FY21','FY22','FY23'],datasets:[{label:'Sanctioned',data:d.budgetData,backgroundColor:'rgba(79,142,247,0.2)',borderColor:'#4f8ef7',borderWidth:1.5,borderRadius:4},{label:'Actual',data:d.actualData,backgroundColor:'rgba(255,77,77,0.2)',borderColor:'#ff4d4d',borderWidth:1.5,borderRadius:4}]},options:{...base}});
+  cht2I=new Chart(document.getElementById('cht2'),{type:'line',data:{labels:['2018','2019','2020','2021','2022','2023','2024'],datasets:[{label:'Repair Events',data:d.repairData,borderColor:'#f5a623',backgroundColor:'rgba(245,166,35,0.08)',fill:true,tension:0.4,pointBackgroundColor:'#f5a623',pointRadius:4,borderWidth:2}]},options:{...base,scales:{...base.scales,y:{...base.scales.y,min:0,max:6}}}});
+  cht3I=new Chart(document.getElementById('cht3'),{type:'doughnut',data:{labels:['Construction','Materials','Labour','Admin','Maintenance','Unaccounted'],datasets:[{data:d.donut,backgroundColor:['#4f8ef7','#8b5cf6','#2dd885','#f5a623','#f97316','#ff4d4d'],borderWidth:0,hoverOffset:6}]},options:{responsive:true,animation:{duration:900},plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:8,padding:5}}}}});
+  cht4I=new Chart(document.getElementById('cht4'),{type:'bar',data:{labels:d.contractorNames,datasets:[{label:'Awarded (₹Cr)',data:d.contractors,backgroundColor:['rgba(79,142,247,0.2)','rgba(139,92,246,0.2)','rgba(45,216,133,0.2)','rgba(245,166,35,0.2)','rgba(249,115,22,0.2)'],borderColor:['#4f8ef7','#8b5cf6','#2dd885','#f5a623','#f97316'],borderWidth:1.5,borderRadius:5}]},options:{...base,indexAxis:'y',plugins:{legend:{display:false}}}});
+  cht5I=new Chart(document.getElementById('cht5'),{type:'line',data:{labels:['2018','2019','2020','2021','2022','2023','2024'],datasets:[{label:'Failure %',data:d.qFail,borderColor:'#ff4d4d',backgroundColor:'rgba(255,77,77,0.08)',fill:true,tension:0.4,pointBackgroundColor:'#ff4d4d',pointRadius:4,borderWidth:2}]},options:{...base,scales:{...base.scales,y:{...base.scales.y,min:0,max:50}}}});
+}
+
+/* ═══════════════════════════════════
+   GAUGE
+═══════════════════════════════════ */
+let gaugeRunning=false,gaugeVal=0;
+function drawGauge(v){
+  const c=document.getElementById('cgauge');if(!c)return;
+  const ctx=c.getContext('2d'),cx=95,cy=105,r=78;
+  ctx.clearRect(0,0,190,190);
+  // Track
+  ctx.beginPath();ctx.arc(cx,cy,r,Math.PI*.75,Math.PI*.25,false);
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.lineWidth=12;ctx.lineCap='round';ctx.stroke();
+  // Fill
+  const sa=Math.PI*.75,ea=sa+(Math.PI*1.5)*(v/100);
+  const gr=ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+  gr.addColorStop(0,'#2dd885');gr.addColorStop(.4,'#f5a623');gr.addColorStop(1,'#ff4d4d');
+  ctx.beginPath();ctx.arc(cx,cy,r,sa,ea,false);
+  ctx.strokeStyle=gr;ctx.lineWidth=12;ctx.lineCap='round';ctx.stroke();
+  // Ticks
+  for(let i=0;i<=10;i++){
+    const a=sa+(Math.PI*1.5)*(i/10);
+    ctx.beginPath();ctx.moveTo(cx+(r-16)*Math.cos(a),cy+(r-16)*Math.sin(a));
+    ctx.lineTo(cx+(r-26)*Math.cos(a),cy+(r-26)*Math.sin(a));
+    ctx.strokeStyle='rgba(255,255,255,0.07)';ctx.lineWidth=1.5;ctx.stroke();
+  }
+  // Needle
+  const na=sa+(Math.PI*1.5)*(v/100);
+  ctx.save();ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=1.8;ctx.lineCap='round';
+  ctx.shadowColor='rgba(255,255,255,0.5)';ctx.shadowBlur=4;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+(r-6)*Math.cos(na),cy+(r-6)*Math.sin(na));
+  ctx.stroke();ctx.restore();
+  // Center dot
+  ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();
+  // Labels
+  ctx.fillStyle='rgba(255,255,255,0.2)';ctx.font='9px DM Mono,monospace';
+  ctx.fillText('0',cx-r*.86,cy+10);ctx.fillText('100',cx+r*.66,cy+10);
+}
+
+function animateGauge(target){
+  if(gaugeRunning)gaugeRunning=false;
+  setTimeout(()=>{
+    gaugeRunning=true;gaugeVal=0;
+    function step(){
+      gaugeVal+=0.8;if(gaugeVal>=target){gaugeVal=target;gaugeRunning=false;}
+      drawGauge(gaugeVal);document.getElementById('score-num').textContent=Math.round(gaugeVal);
+      if(gaugeRunning)requestAnimationFrame(step);
+    }requestAnimationFrame(step);
+  },50);
+}
+
+function toggleRawData(){
+  const c=document.getElementById('raw-content'),b=document.getElementById('raw-btn');
+  const show=c.style.display==='block';c.style.display=show?'none':'block';b.textContent=show?'Show':'Hide';
+}
+
+/* Rotating facts */
+let factIdx=0;
+setInterval(()=>{
+  document.querySelectorAll('.fact-text').forEach(f=>f.classList.remove('active'));
+  factIdx=(factIdx+1)%5;
+  const el=document.getElementById('fact-'+factIdx);if(el)el.classList.add('active');
+},7000);
+
+/* ═══════════════════════════════════
+   THREE.JS — HIGHWAY
+═══════════════════════════════════ */
+let scene,cam,renderer,clock3,roadStripes=[],leadCar,rearCar,leadCar2;
+let fogEnabled=true,hwEnabled=true,colEnabled=true;
+let isRendering=true,renderAnimId=null;
+
+function initThree(){
+  const canvas=document.getElementById('threec');
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x050508);
+  scene.fog=new THREE.Fog(0x050508,30,110);
+
+  cam=new THREE.PerspectiveCamera(72,canvas.clientWidth/canvas.clientHeight,0.1,300);
+  cam.position.set(0,2.8,-5);cam.lookAt(0,1.5,20);
+
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(canvas.clientWidth,canvas.clientHeight);
+  renderer.shadowMap.enabled=true;
+
+  clock3=new THREE.Clock();
+
+  // Road — wider
+  const roadGeo=new THREE.PlaneGeometry(14,500);
+  const roadMat=new THREE.MeshLambertMaterial({color:0x111118});
+  const road=new THREE.Mesh(roadGeo,roadMat);
+  road.rotation.x=-Math.PI/2;road.position.z=100;road.receiveShadow=true;scene.add(road);
+
+  // Lane markings
+  for(let i=0;i<80;i++){
+    const g=new THREE.PlaneGeometry(0.18,4);
+    const m=new THREE.MeshBasicMaterial({color:0xf5a623,opacity:0.7,transparent:true});
+    const stripe=new THREE.Mesh(g,m);
+    stripe.rotation.x=-Math.PI/2;stripe.position.set(0,0.01,i*8-20);
+    scene.add(stripe);roadStripes.push(stripe);
+  }
+  // Edge lines
+  [-5.8,5.8].forEach(x=>{
+    for(let i=0;i<80;i++){
+      const g=new THREE.PlaneGeometry(0.12,8);
+      const m=new THREE.MeshBasicMaterial({color:0xffffff,opacity:0.25,transparent:true});
+      const stripe=new THREE.Mesh(g,m);
+      stripe.rotation.x=-Math.PI/2;stripe.position.set(x,0.01,i*8-20);scene.add(stripe);
+    }
+  });
+  // Inner lanes
+  [-2.5,2.5].forEach(x=>{
+    for(let i=0;i<80;i++){
+      const g=new THREE.PlaneGeometry(0.08,3);
+      const m=new THREE.MeshBasicMaterial({color:0xffffff,opacity:0.1,transparent:true});
+      const stripe=new THREE.Mesh(g,m);
+      stripe.rotation.x=-Math.PI/2;stripe.position.set(x,0.01,i*8-20);scene.add(stripe);
+    }
+  });
+
+  // Shoulder
+  [-7.5,7.5].forEach(x=>{
+    const g=new THREE.PlaneGeometry(2.5,500);
+    const m=new THREE.MeshLambertMaterial({color:0x0d0d14});
+    const s=new THREE.Mesh(g,m);s.rotation.x=-Math.PI/2;s.position.set(x,0,100);scene.add(s);
+  });
+
+  // Guard rails
+  [-6.8,6.8].forEach(x=>{
+    const g=new THREE.BoxGeometry(0.06,0.35,500);
+    const m=new THREE.MeshLambertMaterial({color:0x1e3a6e});
+    const r=new THREE.Mesh(g,m);r.position.set(x,0.35,100);scene.add(r);
+  });
+
+  // Ground
+  const gnd=new THREE.Mesh(new THREE.PlaneGeometry(200,600),new THREE.MeshLambertMaterial({color:0x070710}));
+  gnd.rotation.x=-Math.PI/2;gnd.position.set(0,-0.05,150);scene.add(gnd);
+
+  // Trees (simplified cones)
+  for(let i=0;i<40;i++){
+    const side=i%2===0?1:-1;
+    const x=side*(9+Math.random()*4);
+    const z=i*12-30;
+    const h=3+Math.random()*3;
+    const coneGeo=new THREE.ConeGeometry(0.6+Math.random()*0.4,h,6);
+    const coneMat=new THREE.MeshLambertMaterial({color:0x0d1f0d});
+    const cone=new THREE.Mesh(coneGeo,coneMat);
+    cone.position.set(x,h/2,z);scene.add(cone);
+    // Trunk
+    const trGeo=new THREE.CylinderGeometry(0.1,0.15,0.8,5);
+    const trMat=new THREE.MeshLambertMaterial({color:0x1a1008});
+    const tr=new THREE.Mesh(trGeo,trMat);tr.position.set(x,0.4,z);scene.add(tr);
+  }
+
+  // Lead car — more detailed box
+  function makeCar(bodyColor,lightColor){
+    const g=new THREE.Group();
+    const bodyGeo=new THREE.BoxGeometry(2,0.7,4);
+    const bodyMat=new THREE.MeshLambertMaterial({color:bodyColor});
+    const body=new THREE.Mesh(bodyGeo,bodyMat);body.position.y=0.35;g.add(body);
+    const cabGeo=new THREE.BoxGeometry(1.6,0.55,2.2);
+    const cab=new THREE.Mesh(cabGeo,new THREE.MeshLambertMaterial({color:bodyColor,transparent:true,opacity:0.85}));
+    cab.position.set(0,0.95,-0.3);g.add(cab);
+    // Tail lights
+    const tlGeo=new THREE.BoxGeometry(0.25,0.18,0.05);
+    const tlMat=new THREE.MeshBasicMaterial({color:lightColor});
+    [-0.75,0.75].forEach(x=>{const tl=new THREE.Mesh(tlGeo,tlMat);tl.position.set(x,0.35,-2.0);g.add(tl);});
+    // Wheels
+    const wGeo=new THREE.CylinderGeometry(0.28,0.28,0.18,12);
+    const wMat=new THREE.MeshLambertMaterial({color:0x111111});
+    [[-0.9,0,-1.2],[0.9,0,-1.2],[-0.9,0,1.2],[0.9,0,1.2]].forEach(([x,y,z])=>{
+      const w=new THREE.Mesh(wGeo,wMat);w.rotation.z=Math.PI/2;w.position.set(x,0.28,z);g.add(w);
+    });
+    return g;
+  }
+  leadCar=makeCar(0x181828,0xff2222);leadCar.position.set(0.5,0,40);scene.add(leadCar);
+  rearCar=makeCar(0x1f1040,0x3399ff);rearCar.position.set(-0.5,0,-40);scene.add(rearCar);
+  leadCar2=makeCar(0x202028,0xff8800);leadCar2.position.set(-3,0,30);scene.add(leadCar2);
+
+  // Pothole markers
+  for(let i=0;i<3;i++){
+    const g=new THREE.CircleGeometry(0.4+Math.random()*0.3,8);
+    const m=new THREE.MeshBasicMaterial({color:0xff2222,opacity:0.2,transparent:true});
+    const ph=new THREE.Mesh(g,m);
+    ph.rotation.x=-Math.PI/2;ph.position.set((Math.random()-0.5)*4,0.02,35+i*5);scene.add(ph);
+  }
+
+  // Lights
+  const ambient=new THREE.AmbientLight(0x1a1a2e,4);scene.add(ambient);
+  const dir=new THREE.DirectionalLight(0x4466bb,1.5);dir.position.set(0,20,0);dir.castShadow=true;scene.add(dir);
+  const head=new THREE.PointLight(0xffffff,2.5,25);head.position.set(0,2,-4);scene.add(head);
+  // Blue dash accent
+  const dashLight=new THREE.PointLight(0x4f8ef7,1.2,8);dashLight.position.set(0,1.5,-3.5);scene.add(dashLight);
+
+  window.addEventListener('resize',()=>{
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    cam.aspect=w/h;cam.updateProjectionMatrix();renderer.setSize(w,h);
+  });
+}
+
+/* ─── RADAR ─── */
+function drawRadar(){
+  const c=document.getElementById('radar-canvas');if(!c)return;
+  const ctx=c.getContext('2d'),cx=60,cy=60,r=52;
+  ctx.clearRect(0,0,120,120);
+  // Bg
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='rgba(5,5,8,0.85)';ctx.fill();
+  ctx.strokeStyle='rgba(79,142,247,0.2)';ctx.lineWidth=1;ctx.stroke();
+  // Grid circles
+  [0.33,0.66,1].forEach(s=>{
+    ctx.beginPath();ctx.arc(cx,cy,r*s,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(79,142,247,${0.06+s*0.06})`;ctx.lineWidth=1;ctx.stroke();
+  });
+  // Cross
+  ctx.strokeStyle='rgba(79,142,247,0.1)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+  // Sweep
+  const t=Date.now()/1000;const angle=t*2.5;
+  const gd=ctx.createConicalGradient?null:null;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+  const lg=ctx.createLinearGradient(0,0,r,0);
+  lg.addColorStop(0,'rgba(45,216,133,0.5)');lg.addColorStop(1,'rgba(45,216,133,0)');
+  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,-0.3,0,false);ctx.closePath();
+  ctx.fillStyle=lg;ctx.fill();ctx.restore();
+  // Cars
+  const now=Date.now()/1000;
+  [[0,0.35,'rgba(255,77,77,0.9)'],[0,-0.45,'rgba(79,142,247,0.9)'],[-.28,0.25,'rgba(245,166,35,0.8)']].forEach(([px,py,col])=>{
+    const nx=cx+px*r*(0.95+Math.sin(now*0.7)*0.05);
+    const ny=cy+py*r*(0.95+Math.cos(now*0.5)*0.05);
+    ctx.beginPath();ctx.arc(nx,ny,3.5,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.beginPath();ctx.arc(nx,ny,6,0,Math.PI*2);
+    ctx.strokeStyle=col.replace('0.9','0.3').replace('0.8','0.3');ctx.lineWidth=1;ctx.stroke();
+  });
+  // Self dot
+  ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);
+  ctx.fillStyle='rgba(45,216,133,0.9)';ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);
+  ctx.strokeStyle='rgba(45,216,133,0.3)';ctx.lineWidth=1.5;ctx.stroke();
+  // Label
+  ctx.fillStyle='rgba(255,255,255,0.15)';ctx.font='7px DM Mono,monospace';ctx.textAlign='center';
+  ctx.fillText('RADAR',cx,cy+r+10);
+}
+
+/* ─── SENSORS ─── */
+let simTime=0;
+function updateSim(){
+  simTime+=0.016;
+  const speed=78+Math.sin(simTime*0.4)*8+Math.cos(simTime*0.2)*4;
+  const front=38+Math.sin(simTime*1.1)*18;
+  const rear=88+Math.cos(simTime*0.7)*22;
+  const fogIdx=0.38+Math.sin(simTime*0.3)*0.22;
+  const vis=Math.round(450-fogIdx*350);
+
+  document.getElementById('speedo-num').textContent=Math.round(speed);
+  document.getElementById('h-speed').innerHTML=`${Math.round(speed)}<span class="unit">km/h</span>`;
+  document.getElementById('tele-speed').textContent=Math.round(speed);
+  document.getElementById('h-vis').innerHTML=`${vis}<span class="unit">m</span>`;
+  document.getElementById('tele-vis').textContent=vis+'m';
+  document.getElementById('s-front').textContent=Math.round(front)+'m';
+  document.getElementById('s-rear').textContent=Math.round(rear)+'m';
+  document.getElementById('s-fog').textContent=fogIdx.toFixed(2);
+
+  const fogPct=Math.round(fogIdx*100);
+  document.getElementById('fog-fill').style.width=fogPct+'%';
+
+  let fogLevel='Low';let fogColor='var(--green)';
+  if(fogIdx>0.5){fogLevel='Heavy';fogColor='var(--red)';}
+  else if(fogIdx>0.28){fogLevel='Moderate';fogColor='var(--amber)';}
+  document.getElementById('h-fog').textContent=fogLevel;
+  document.getElementById('h-fog').style.color=fogColor;
+  document.getElementById('tele-fog').textContent=fogLevel.substring(0,3);
+  document.getElementById('tele-fog').style.color=fogColor;
+  document.getElementById('fog-label').innerHTML=`<span style="color:${fogColor}">${fogLevel}</span>`;
+
+  const frontWarn=document.getElementById('wb-front');
+  const rearWarn=document.getElementById('wb-rear');
+  const fogWarn=document.getElementById('wb-fog');
+  const ov=document.getElementById('warn-overlay');
+
+  if(colEnabled){
+    if(front<35){frontWarn.classList.add('show');}else{frontWarn.classList.remove('show');}
+    if(rear<65){rearWarn.classList.add('show');}else{rearWarn.classList.remove('show');}
+  } else {frontWarn.classList.remove('show');rearWarn.classList.remove('show');}
+
+  if(fogEnabled&&fogIdx>0.5){fogWarn.classList.add('show');}else{fogWarn.classList.remove('show');}
+
+  if(front<35){ov.className='warn-overlay red';}
+  else if(fogIdx>0.5||rear<65){ov.className='warn-overlay amber';}
+  else{ov.className='warn-overlay';}
+
+  // Scene fog
+  if(scene&&fogEnabled){scene.fog.near=15+fogIdx*25;scene.fog.far=70-fogIdx*35;}
+  else if(scene){scene.fog.near=40;scene.fog.far=120;}
+}
+
+/* ─── RENDER LOOP ─── */
+function renderLoop(){
+  renderAnimId=requestAnimationFrame(renderLoop);
+  if(!isRendering)return;
+
+  const dt=clock3.getDelta();
+  updateSim();
+  drawRadar();
+
+  // Scroll stripes
+  roadStripes.forEach(s=>{s.position.z-=0.28;if(s.position.z<-20)s.position.z+=80*8/80;});
+
+  if(leadCar){leadCar.position.z-=0.04+Math.sin(simTime*0.3)*0.02;}
+  if(rearCar){rearCar.position.z+=0.06;}
+  if(leadCar2){leadCar2.position.z-=0.035;}
+
+  if(leadCar&&leadCar.position.z<15)leadCar.position.z=55;
+  if(rearCar&&rearCar.position.z>10)rearCar.position.z=-50;
+  if(leadCar2&&leadCar2.position.z<10)leadCar2.position.z=50;
+
+  // Camera sway
+  cam.position.x=Math.sin(simTime*0.18)*0.15;
+  cam.position.y=2.7+Math.sin(simTime*0.35)*0.06;
+  cam.lookAt(cam.position.x*0.3,1.5,25);
+
+  renderer.render(scene,cam);
+}
+
+function toggleHW(){const t=document.getElementById('tog-hw');t.classList.toggle('on');hwEnabled=t.classList.contains('on');document.getElementById('h-mode').textContent=hwEnabled?'Highway':'City';}
+function toggleFog(){const t=document.getElementById('tog-fog');t.classList.toggle('on');fogEnabled=t.classList.contains('on');}
+function toggleCol(){const t=document.getElementById('tog-col');t.classList.toggle('on');colEnabled=t.classList.contains('on');}
+
+/* ═══════════════════════════════════
+   CHATBOT
+═══════════════════════════════════ */
+function toggleChat(){
+  const cb=document.getElementById('chatbot');
+  cb.classList.toggle('open');
+  if(cb.classList.contains('open'))document.getElementById('cbinput').focus();
+}
+function useChip(el){document.getElementById('cbinput').value=el.textContent;sendMsg();}
+function addAiMsg(text){
+  const msgs=document.getElementById('chat-msgs');
+  const dot=document.createElement('div');dot.className='msg';
+  dot.innerHTML=`<div class="msg-av"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div><div class="msg-time">Now</div></div>`;
+  msgs.appendChild(dot);msgs.scrollTop=msgs.scrollHeight;
+  const wave=document.getElementById('wave-viz');if(wave)wave.classList.add('active');
+  setTimeout(()=>{
+    dot.querySelector('.msg-bubble').innerHTML=text;
+    msgs.scrollTop=msgs.scrollHeight;
+    if(wave)wave.classList.remove('active');
+  },1100);
+}
+
+async function sendMsg(){
+  const inp=document.getElementById('cbinput');
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  const msgs=document.getElementById('chat-msgs');
+  const userDiv=document.createElement('div');userDiv.className='msg user';
+  userDiv.innerHTML=`<div class="msg-av"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div><div><div class="msg-bubble">${text}</div><div class="msg-time">Now</div></div>`;
+  msgs.appendChild(userDiv);msgs.scrollTop=msgs.scrollHeight;
+
+  const dot=document.createElement('div');dot.className='msg';
+  dot.innerHTML=`<div class="msg-av"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div><div class="msg-bubble"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div><div class="msg-time">Now</div></div>`;
+  msgs.appendChild(dot);msgs.scrollTop=msgs.scrollHeight;
+  const wave=document.getElementById('wave-viz');if(wave)wave.classList.add('active');
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:600,
+        system:'You are RoadWatch AI, an expert on India road infrastructure, corruption in public works, highway safety, NHAI, CAG audits, PMGSY, fog driving tips, and filing RTI/CPGRAMS complaints. Be concise (3-4 sentences), direct, and informative. Use ₹ symbol for Indian rupees. Current road context: NH-48, KM 234, fog moderate, corruption score 71/100.',
+        messages:[{role:'user',content:text}]
+      })
+    });
+    const data=await res.json();
+    const reply=data.content&&data.content[0]&&data.content[0].text?data.content[0].text:'I encountered an issue. Please try again.';
+    dot.querySelector('.msg-bubble').innerHTML=reply;
+    if(wave)wave.classList.remove('active');
+  }catch(e){
+    dot.querySelector('.msg-bubble').innerHTML='AI service unavailable. Ask me about road safety, corruption scores, fog tips, or NHAI schemes.';
+    if(wave)wave.classList.remove('active');
+  }
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+/* ═══════════════════════════════════
+   COMPLAINT PORTAL
+═══════════════════════════════════ */
+const AUTHORITY_DATA = [
+  { name:'NHAI Regional Officer — North', dept:'National Highways Authority of India', level:'national', roads:'NH (all)', issues:'All NH issues', contact:'nhainorth@nhai.gov.in', phone:'1800-11-6886', portal:'nhai.gov.in' },
+  { name:'Executive Engineer (NH), MoRTH', dept:'Ministry of Road Transport & Highways', level:'national', roads:'NH-48, NH-44, NH-58', issues:'Budget misuse, tender fraud, quality', contact:'complaint@morth.nic.in', phone:'011-23714152', portal:'morth.nic.in' },
+  { name:'Superintending Engineer, NHAI', dept:'NHAI Project Implementation Unit', level:'national', roads:'NH (expressways)', issues:'Construction quality, contractor non-performance', contact:'piu.north@nhai.gov.in', phone:'1800-11-6886', portal:'iRASTE.nhai.gov.in' },
+  { name:'Central Vigilance Commission', dept:'Independent Vigilance Body', level:'vigilance', roads:'All NH/SH', issues:'Corruption, bribery, financial fraud', contact:'complaint.cvc@nic.in', phone:'011-24600200', portal:'cvc.gov.in/complaint' },
+  { name:'CAG (Comptroller & Auditor General)', dept:'Supreme Audit Institution', level:'vigilance', roads:'All national & state roads', issues:'Audit irregularities, unaccounted funds', contact:'audit.morth@cag.gov.in', phone:'011-23239223', portal:'cag.gov.in' },
+  { name:'Executive Engineer (PWD), Rajasthan', dept:'Public Works Department — Rajasthan', level:'state', roads:'SH, MDR (Rajasthan)', issues:'State highway damage, local roads', contact:'ce.pwd.rj@rajasthan.gov.in', phone:'0141-2227480', portal:'pwd.rajasthan.gov.in' },
+  { name:'Executive Engineer (PWD), UP', dept:'Public Works Department — UP', level:'state', roads:'SH, MDR (Uttar Pradesh)', issues:'State highway quality, potholes', contact:'pwd.complaint@up.gov.in', phone:'0522-2239048', portal:'uppwd.up.nic.in' },
+  { name:'State Road Safety Council', dept:'State Transport Dept', level:'state', roads:'All state roads', issues:'Missing barriers, signage, road safety', contact:'roadsafety@state.gov.in', phone:'1800-180-4132', portal:'roadsafetycouncil.in' },
+  { name:'District Collector / DM', dept:'District Administration', level:'district', roads:'MDR, rural roads', issues:'Local road damage, emergency repairs', contact:'dm.district@nic.in', phone:'(District helpline)', portal:'pgportal.gov.in' },
+  { name:'PMGSY / NRRDA', dept:'National Rural Roads Dev Agency', level:'national', roads:'Gram Sadak / Rural', issues:'Rural connectivity, village roads', contact:'grievance@nrrda.gov.in', phone:'011-23061903', portal:'pmgsy.nic.in/grievance' },
+  { name:'Ombudsman — NHAI', dept:'NHAI Independent Ombudsman', level:'national', roads:'All NH (tolled)', issues:'Toll overcharging, harassment', contact:'ombudsman@nhai.gov.in', phone:'1800-11-6886', portal:'nhai.gov.in/ombudsman' },
+  { name:'CIC (Chief Information Commissioner)', dept:'Central Information Commission', level:'vigilance', roads:'All', issues:'RTI non-response escalation', contact:'cic.gov.in/appeal', phone:'011-26180532', portal:'cic.gov.in' },
+];
+
+const ROUTING_MAP = {
+  'NH-pothole':      { authority:'Executive Engineer (NH), MoRTH', contact:'complaint@morth.nic.in', portal:'iRASTE.nhai.gov.in', deadline:'30 days', law:'NHAI Act 1988, S.16' },
+  'NH-corruption':   { authority:'Central Vigilance Commission', contact:'complaint.cvc@nic.in', portal:'cvc.gov.in/complaint', deadline:'60 days', law:'Prevention of Corruption Act 1988' },
+  'NH-incomplete':   { authority:'NHAI Regional Officer — North', contact:'nhainorth@nhai.gov.in', portal:'nhai.gov.in', deadline:'30 days', law:'NHAI Act 1988, S.12' },
+  'NH-quality':      { authority:'Superintending Engineer, NHAI PIU', contact:'piu.north@nhai.gov.in', portal:'iRASTE.nhai.gov.in', deadline:'21 days', law:'MORT&H Road Quality Guidelines' },
+  'NH-safety':       { authority:'State Road Safety Council', contact:'roadsafety@state.gov.in', portal:'roadsafetycouncil.in', deadline:'15 days', law:'Motor Vehicles Act 1988, S.138' },
+  'NH-toll':         { authority:'NHAI Ombudsman', contact:'ombudsman@nhai.gov.in', portal:'nhai.gov.in/ombudsman', deadline:'30 days', law:'NHAI Fee Rules 2008' },
+  'NH-tender':       { authority:'CAG / CVC (dual-file)', contact:'complaint.cvc@nic.in', portal:'cvc.gov.in/complaint', deadline:'60 days', law:'GFR 2017, Rule 144' },
+  'NH-contractor':   { authority:'Executive Engineer (NH), MoRTH', contact:'complaint@morth.nic.in', portal:'cpgrams.gov.in', deadline:'30 days', law:'NHAI Act 1988, S.12' },
+  'SH-pothole':      { authority:'PWD Executive Engineer (State)', contact:'pwd.complaint@state.gov.in', portal:'pgportal.gov.in', deadline:'30 days', law:'State PWD Manual' },
+  'SH-corruption':   { authority:'State Vigilance Commission', contact:'svc@state.gov.in', portal:'pgportal.gov.in', deadline:'45 days', law:'Prevention of Corruption Act 1988' },
+  'SH-quality':      { authority:'PWD Superintending Engineer (Circle)', contact:'pwd.se@state.gov.in', portal:'pgportal.gov.in', deadline:'30 days', law:'State PWD Manual' },
+  'SH-safety':       { authority:'District Collector / DM', contact:'dm@nic.in', portal:'pgportal.gov.in', deadline:'15 days', law:'Motor Vehicles Act 1988' },
+  'MDR-pothole':     { authority:'District Collector / DM', contact:'dm.district@nic.in', portal:'pgportal.gov.in', deadline:'30 days', law:'Gram Sadak Yojana Guidelines' },
+  'rural-pothole':   { authority:'PMGSY / NRRDA', contact:'grievance@nrrda.gov.in', portal:'pmgsy.nic.in/grievance', deadline:'30 days', law:'PMGSY Guidelines 2019' },
+  'rural-corruption':{ authority:'PMGSY State Nodal Officer', contact:'pmgsy@state.gov.in', portal:'pmgsy.nic.in', deadline:'45 days', law:'PMGSY Guidelines 2019' },
+};
+
+function updateRouterResult() { /* auto-route on change */ }
+
+function routeComplaint() {
+  const roadType = document.getElementById('rf-road-type').value;
+  const issue = document.getElementById('rf-issue').value;
+  if (!roadType || !issue) { showToast('Please select both road type and issue category.', 'warn'); return; }
+  const key = `${roadType}-${issue}`;
+  const match = ROUTING_MAP[key] || ROUTING_MAP[`${roadType}-pothole`] || ROUTING_MAP['NH-pothole'];
+  const result = document.getElementById('authority-result');
+  const grid = document.getElementById('ar-grid');
+  grid.innerHTML = `
+    <div class="ar-item"><label>Responsible Authority</label><span style="color:var(--t1);font-weight:600">${match.authority}</span></div>
+    <div class="ar-item"><label>Contact / Portal</label><span style="color:var(--blue-bright)">${match.portal}</span></div>
+    <div class="ar-item"><label>Email</label><span>${match.contact}</span></div>
+    <div class="ar-item"><label>Legal Basis</label><span style="color:var(--amber)">${match.law}</span></div>
+    <div class="ar-item"><label>Mandatory Deadline</label><span style="color:var(--green);font-weight:600">${match.deadline}</span></div>
+    <div class="ar-item"><label>Escalation If No Reply</label><span>CIC → CVC → High Court</span></div>
+  `;
+  result.classList.add('show');
+  result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+let currentFilter = 'all';
+function filterAuthority(type) {
+  currentFilter = type;
+  document.querySelectorAll('[id^="af-"]').forEach(b => b.style.borderColor = 'var(--border)');
+  const el = document.getElementById('af-' + type);
+  if (el) el.style.borderColor = 'var(--blue)';
+  renderAuthorityTable();
+}
+
+function renderAuthorityTable() {
+  const tbody = document.getElementById('authority-tbody');
+  const data = currentFilter === 'all' ? AUTHORITY_DATA : AUTHORITY_DATA.filter(a => a.level === currentFilter);
+  const levelLabels = {
+    national:  '<span class="level-dot level-national">National</span>',
+    state:     '<span class="level-dot level-state">State</span>',
+    district:  '<span class="level-dot level-district">District</span>',
+    vigilance: '<span class="level-dot level-vigilance">Vigilance</span>',
+  };
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td><div class="auth-name">${a.name}</div><div class="auth-dept">${a.dept}</div></td>
+      <td style="font-family:var(--fm);font-size:11px">${a.roads}</td>
+      <td>${levelLabels[a.level]||''}</td>
+      <td style="color:var(--t3);font-size:11px">${a.roads}</td>
+      <td style="font-size:11px;color:var(--t2)">${a.issues}</td>
+      <td>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--blue-bright);margin-bottom:3px">${a.portal}</div>
+        <button class="copy-btn" onclick="showToast('Copied: ${a.contact}')">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy email
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function submitComplaint() {
+  const name = document.getElementById('cf-name').value.trim();
+  const desc = document.getElementById('cf-desc').value.trim();
+  if (!name || !desc) { showToast('Please fill in your name and complaint description.', 'warn'); return; }
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Submitted Successfully`;
+  btn.classList.add('submitted');
+  const id = 'CPGRAMS-2024-NH48-' + Math.floor(1800 + Math.random() * 200);
+  showToast(`✅ Complaint filed! Your ID: ${id}. Authority notified via iRASTe. Expected response: 30 days.`);
+  setTimeout(() => { btn.innerHTML = `<svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>Submit to Responsible Authority`; btn.classList.remove('submitted'); }, 5000);
+}
+
+function trackComplaint() {
+  const id = document.getElementById('track-id').value.trim();
+  const result = document.getElementById('track-result');
+  if (!id) { showToast('Enter a complaint ID to track.', 'warn'); return; }
+  const statuses = [
+    `<strong style="color:var(--green)">Status: Under Investigation</strong><br>Assigned to: Exec. Engineer (NH), MoRTH — Zone North<br>Last updated: ${new Date().toLocaleDateString('en-IN')}<br>Expected closure: Within 14 days<br>Action taken: Site inspection scheduled KM 234.`,
+    `<strong style="color:var(--amber)">Status: Acknowledged — Pending Action</strong><br>Received by: NHAI Regional Office, Jaipur<br>Last updated: ${new Date().toLocaleDateString('en-IN')}<br>Remark: Forwarded to contractor BRC Ltd for repair estimate.`,
+    `<strong style="color:var(--red)">Status: Overdue — No Response</strong><br>Filed: 38 days ago. Mandatory 30-day deadline breached.<br>Recommendation: Escalate to Central Information Commission (CIC).<br>RTI escalation template available above.`,
+  ];
+  result.style.display = 'block';
+  result.innerHTML = statuses[Math.floor(Math.random() * statuses.length)];
+}
+
+function updateCharCount(el) {
+  const n = el.value.length;
+  document.getElementById('char-count').textContent = `${n} / 500 characters`;
+  document.getElementById('char-count').style.color = n > 450 ? 'var(--amber)' : 'var(--t3)';
+}
+
+function showToast(msg, type = 'success') {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = `<div class="toast-icon">${type === 'warn' ? '⚠️' : '✅'}</div><div style="flex:1;font-size:12px;line-height:1.6">${msg}</div><button class="toast-close" onclick="this.parentNode.remove()">✕</button>`;
+  document.body.appendChild(t);
+  setTimeout(() => { if (t.parentNode) t.remove(); }, 5000);
+}
+
+function animateComplaintStats() {
+  const targets = [1847, 1254, 593, 47];
+  const ids = ['cs1', 'cs2', 'cs3', 'cs4'];
+  ids.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let v = 0; const target = targets[i];
+    const step = Math.ceil(target / 60);
+    const iv = setInterval(() => {
+      v = Math.min(v + step, target);
+      el.textContent = v.toLocaleString('en-IN');
+      el.classList.add('counting');
+      if (v >= target) clearInterval(iv);
+    }, 20);
+  });
+}
+
+function initComplaintChart() {
+  const ctx = document.getElementById('complaint-chart');
+  if (!ctx || ctx._chart) return;
+  ctx._chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      datasets: [
+        { label: 'Filed', data: [142,118,165,203,189,211,178,224,197,238,204,178], backgroundColor: 'rgba(79,142,247,0.2)', borderColor: '#4f8ef7', borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Resolved', data: [48,38,52,61,55,63,52,70,58,72,61,54], backgroundColor: 'rgba(45,216,133,0.2)', borderColor: '#2dd885', borderWidth: 1.5, borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, animation: { duration: 900 },
+      plugins: { legend: { labels: { font: { size: 10, family:"'DM Sans',sans-serif" }, color: '#3d4f73', boxWidth: 8, padding: 8 } } },
+      scales: {
+        x: { ticks: { font: { size: 9 }, color: '#3d4f73' }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { ticks: { font: { size: 9 }, color: '#3d4f73' }, grid: { color: 'rgba(255,255,255,0.03)' } }
+      }
+    }
+  });
+}
+
+/* Patch switchTab to handle complaints */
+const _origSwitchTab = switchTab;
+switchTab = function(name, btn) {
+  _origSwitchTab(name, btn);
+  if (name === 'complaints') {
+    const p = document.getElementById('complaints-panel');
+    if (p) { p.style.display = 'flex'; requestAnimationFrame(() => p.classList.add('active')); }
+    setTimeout(() => { renderAuthorityTable(); animateComplaintStats(); initComplaintChart(); }, 200);
+  }
+};
+window.addEventListener('DOMContentLoaded',()=>{
+  initThree();
+  renderLoop();
+  // Pre-populate timeline for NH-48
+  populateTimeline(NH_DATA['NH-48'],'NH-48');
+  populateRawTable(NH_DATA['NH-48']);
+});
+</script>
+</body>
+</html>
